@@ -1,0 +1,119 @@
+<?php
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file options-media.phtml
+ * @author Philipp Breitsprecher
+ * @date 18.11.25, 20:30
+ * @email philippbreitsprecher@gmail.com
+ */
+
+declare(strict_types=1);
+?>
+
+<script>
+    require(['jquery', 'domReady!'], function($) {
+        'use strict';
+
+        console.log('ProductOptionsMedia: Script loaded!');
+
+        var injected = false;
+
+        function injectMediaFields() {
+            if (injected) {
+                console.log('ProductOptionsMedia: Already injected globally');
+                return;
+            }
+
+            console.log('ProductOptionsMedia: Injecting fields...');
+
+            var $container = $('#product_options_container_top');
+            var $tables = $container.find('table');
+
+            console.log('ProductOptionsMedia: Found ' + $tables.length + ' tables');
+
+            if ($tables.length === 0) {
+                return;
+            }
+
+            $tables.each(function() {
+                var $table = $(this);
+
+                // Check if already injected in this table
+                if ($table.find('th.col-media-image').length > 0) {
+                    console.log('ProductOptionsMedia: Already injected in this table');
+                    return true;
+                }
+
+                // Add header columns
+                var $headerRow = $table.find('thead tr').first();
+                var $lastHeader = $headerRow.find('th').last();
+
+                if ($lastHeader.length > 0) {
+                    $lastHeader.before(
+                        '<th class="col-media-image">Image</th>' +
+                        '<th class="col-media-description">Description</th>'
+                    );
+                    console.log('ProductOptionsMedia: Headers injected!');
+                }
+
+                // Add data columns to rows
+                $table.find('tbody tr').each(function() {
+                    var $row = $(this);
+                    var $lastCell = $row.find('td').last();
+
+                    if ($lastCell.length > 0 && $row.find('td.col-media-image').length === 0) {
+                        $lastCell.before(
+                            '<td class="col-media-image"><input type="text" class="admin__control-text" placeholder="Image path"></td>' +
+                            '<td class="col-media-description"><textarea class="admin__control-textarea" rows="2" placeholder="Description"></textarea></td>'
+                        );
+                    }
+                });
+            });
+
+            injected = true;
+            console.log('ProductOptionsMedia: Injection complete!');
+        }
+
+        // Watch for tab clicks - Options tab might load content dynamically
+        $(document).on('click', '[data-role="product-custom-options-content"], .admin__collapsible-title', function() {
+            console.log('ProductOptionsMedia: Tab/Collapsible clicked');
+            setTimeout(function() {
+                injectMediaFields();
+            }, 500);
+        });
+
+        // Watch for mutations in the container
+        var $container = $('#product_options_container_top');
+        if ($container.length > 0) {
+            var observer = new MutationObserver(function(mutations) {
+                var hasNewNodes = false;
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length > 0) {
+                        hasNewNodes = true;
+                    }
+                });
+
+                if (hasNewNodes) {
+                    console.log('ProductOptionsMedia: DOM changed, re-injecting...');
+                    injected = false; // Reset flag
+                    setTimeout(function() {
+                        injectMediaFields();
+                    }, 200);
+                }
+            });
+
+            observer.observe($container[0], {
+                childList: true,
+                subtree: true
+            });
+
+            console.log('ProductOptionsMedia: MutationObserver active');
+        }
+
+        // Initial attempt
+        setTimeout(function() {
+            injectMediaFields();
+        }, 1000);
+    });
+</script>
