@@ -14,16 +14,21 @@ declare(strict_types=1);
 /** @var \Magento\Framework\Escaper $escaper */
 
 $uploadUrl = $block->getUrl('productoptions/product_option/uploadImage');
+$mediaGalleryUrl = $block->getUrl('cms/wysiwyg_images/index', [
+    'target_element_id' => 'TARGET_ELEMENT_ID'
+]);
 ?>
 
 <script>
 require([
     'jquery',
-    'mage/translate'
+    'mage/translate',
+    'mage/adminhtml/browser'
 ], function($, $t) {
     'use strict';
 
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
+    var mediaGalleryUrl = '<?= $escaper->escapeJs($mediaGalleryUrl) ?>';
 
     /**
      * Convert absolute path to relative path
@@ -63,6 +68,7 @@ require([
                 $input.attr('id', 'option_image_' + Math.random().toString(36).substr(2, 9));
             }
 
+            var inputId = $input.attr('id');
             var $wrapper = $input.parent();
 
             // Create button container
@@ -72,7 +78,11 @@ require([
             var $uploadBtn = $('<button type="button" class="action-default scalable" title="' + $t('Upload') + '">' +
                 '<span>' + $t('Upload') + '</span></button>');
 
-            $buttonContainer.append($uploadBtn);
+            // Gallery button
+            var $galleryBtn = $('<button type="button" class="action-default scalable" title="' + $t('Gallery') + '" style="margin-left: 5px;">' +
+                '<span>' + $t('Gallery') + '</span></button>');
+
+            $buttonContainer.append($uploadBtn).append($galleryBtn);
             $wrapper.append($buttonContainer);
 
             // Upload functionality
@@ -115,6 +125,25 @@ require([
                         $fileInput.val('');
                     }
                 });
+            });
+
+            // Gallery functionality
+            $galleryBtn.on('click', function(e) {
+                e.preventDefault();
+
+                var url = mediaGalleryUrl.replace('TARGET_ELEMENT_ID', inputId);
+
+                // Open media browser in new window
+                var windowWidth = 1000;
+                var windowHeight = 600;
+                var windowLeft = (screen.width - windowWidth) / 2;
+                var windowTop = (screen.height - windowHeight) / 2;
+
+                window.open(
+                    url,
+                    'MediaBrowser',
+                    'width=' + windowWidth + ',height=' + windowHeight + ',left=' + windowLeft + ',top=' + windowTop + ',scrollbars=yes,resizable=yes'
+                );
             });
 
             // Watch for changes and convert to relative path
