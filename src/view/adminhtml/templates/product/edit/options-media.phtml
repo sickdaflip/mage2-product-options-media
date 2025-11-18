@@ -28,6 +28,29 @@ require([
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
     var mediaGalleryUrl = '<?= $escaper->escapeJs($block->getUrl('cms/wysiwyg_images/index', ['target_element_id' => '__target__'])) ?>';
 
+    /**
+     * Convert absolute path to relative path
+     * e.g. /media/wysiwyg/image.jpg -> wysiwyg/image.jpg
+     * e.g. {{media url="wysiwyg/image.jpg"}} -> wysiwyg/image.jpg
+     */
+    function toRelativePath(path) {
+        if (!path) return path;
+
+        // Handle Magento directive format
+        var directiveMatch = path.match(/\{\{media url="([^"]+)"\}\}/);
+        if (directiveMatch) {
+            return directiveMatch[1];
+        }
+
+        // Remove leading /media/ or media/
+        path = path.replace(/^\/media\//, '').replace(/^media\//, '');
+
+        // Remove any URL parts (http://..../media/)
+        path = path.replace(/^https?:\/\/[^\/]+\/media\//, '');
+
+        return path;
+    }
+
     function addImageButtons() {
         // Find all image input fields in the custom options values
         $('input[name*="[values]"][name*="[image]"]').each(function() {
@@ -110,9 +133,23 @@ require([
 
                 MediabrowserUtility.openDialog(url, false, false, $t('Media Gallery'), {
                     closed: function() {
-                        // Dialog closed
+                        // Convert to relative path after selection
+                        var currentVal = $input.val();
+                        var relativePath = toRelativePath(currentVal);
+                        if (relativePath !== currentVal) {
+                            $input.val(relativePath);
+                        }
                     }
                 });
+            });
+
+            // Watch for changes and convert to relative path
+            $input.on('change', function() {
+                var currentVal = $input.val();
+                var relativePath = toRelativePath(currentVal);
+                if (relativePath !== currentVal) {
+                    $input.val(relativePath);
+                }
             });
 
             $input.data('buttons-added', true);
