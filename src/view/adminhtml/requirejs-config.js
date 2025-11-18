@@ -8,11 +8,5 @@
  */
 
 var config = {
-    config: {
-        mixins: {
-            'Magento_Catalog/js/options': {
-                'Sickdaflip_ProductOptionsMedia/js/options-mixin': true
-            }
-        }
-    }
+    // Configuration placeholder for future enhancements
 };
