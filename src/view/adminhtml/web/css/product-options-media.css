@@ -1,0 +1,56 @@
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file product-options-media.css
+ * @author Philipp Breitsprecher
+ * @date 18.11.25
+ * @email philippbreitsprecher@gmail.com
+ */
+
+/* Fix media gallery dialog positioning */
+.media-gallery-modal {
+    z-index: 10000 !important;
+}
+
+.media-gallery-modal .modal-inner-wrap {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+/* Style the upload/gallery buttons */
+.admin__field-control-buttons {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.admin__field-control-buttons button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Fix input field width in dynamic rows */
+.admin__control-text[name*="[image]"],
+.admin__control-textarea[name*="[description]"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure proper column sizing */
+td.col-media-image,
+td.col-media-description {
+    min-width: 150px;
+}
+
+/* Fix for media browser overlay */
+.modals-overlay {
+    z-index: 9999 !important;
+}
+
+/* Media browser specific fixes */
+.browser-window {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
