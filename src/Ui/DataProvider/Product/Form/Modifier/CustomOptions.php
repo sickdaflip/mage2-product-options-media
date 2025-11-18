@@ -66,10 +66,7 @@ class CustomOptions extends AbstractModifier
                         'dataType' => Text::NAME,
                         'sortOrder' => $sortOrder,
                         'fit' => true,
-                        'required' => false,
-                        'validation' => [
-                            'required-entry' => false,
-                        ],
+                        'validation' => [],
                         'additionalClasses' => 'admin__field-small',
                         'placeholder' => __('Image path'),
                     ],
@@ -97,10 +94,7 @@ class CustomOptions extends AbstractModifier
                         'dataType' => Text::NAME,
                         'sortOrder' => $sortOrder,
                         'fit' => true,
-                        'required' => false,
-                        'validation' => [
-                            'required-entry' => false,
-                        ],
+                        'validation' => [],
                         'rows' => 2,
                     ],
                 ],
