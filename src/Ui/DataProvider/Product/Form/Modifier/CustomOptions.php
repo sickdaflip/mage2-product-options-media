@@ -12,11 +12,9 @@ declare(strict_types=1);
 
 namespace Sickdaflip\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier;
 
-use Magento\Catalog\Model\Locator\LocatorInterface;
 use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\AbstractModifier;
 use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions as MagentoCustomOptions;
 use Magento\Framework\Stdlib\ArrayManager;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Ui\Component\Form\Element\DataType\Text;
 use Magento\Ui\Component\Form\Element\Input;
 use Magento\Ui\Component\Form\Element\Textarea;
@@ -30,28 +28,12 @@ class CustomOptions extends AbstractModifier
     private ArrayManager $arrayManager;
 
     /**
-     * @var LocatorInterface
-     */
-    private LocatorInterface $locator;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private StoreManagerInterface $storeManager;
-
-    /**
      * @param ArrayManager $arrayManager
-     * @param LocatorInterface $locator
-     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
-        ArrayManager $arrayManager,
-        LocatorInterface $locator,
-        StoreManagerInterface $storeManager
+        ArrayManager $arrayManager
     ) {
         $this->arrayManager = $arrayManager;
-        $this->locator = $locator;
-        $this->storeManager = $storeManager;
     }
 
     /**
@@ -69,70 +51,29 @@ class CustomOptions extends AbstractModifier
     {
         $this->meta = $meta;
 
-        $this->addImageField();
-        $this->addDescriptionField();
+        // Path to option values grid (select/radio/checkbox options)
+        $valuePath = $this->arrayManager->findPath(
+            MagentoCustomOptions::GRID_TYPE_SELECT_NAME,
+            $this->meta,
+            null,
+            'children'
+        );
+
+        if ($valuePath) {
+            // Add fields to the record children
+            $recordPath = $valuePath . '/children/record/children';
+
+            $this->meta = $this->arrayManager->merge(
+                $recordPath,
+                $this->meta,
+                [
+                    'image' => $this->getImageFieldConfig(45),
+                    'description' => $this->getDescriptionFieldConfig(46)
+                ]
+            );
+        }
 
         return $this->meta;
-    }
-
-    /**
-     * Add image field to option values
-     *
-     * @return void
-     */
-    private function addImageField(): void
-    {
-        $sortOrder = 45; // After price field
-
-        $imagePath = $this->arrayManager->findPath(
-            MagentoCustomOptions::CONTAINER_OPTION,
-            $this->meta,
-            null,
-            'children'
-        );
-
-        if ($imagePath) {
-            $imageContainer = $imagePath . '/' . MagentoCustomOptions::GRID_TYPE_SELECT_NAME
-                . '/children/record/children/';
-
-            $this->meta = $this->arrayManager->merge(
-                $imageContainer,
-                $this->meta,
-                [
-                    'image' => $this->getImageFieldConfig($sortOrder)
-                ]
-            );
-        }
-    }
-
-    /**
-     * Add description field to option values
-     *
-     * @return void
-     */
-    private function addDescriptionField(): void
-    {
-        $sortOrder = 46; // After image field
-
-        $descriptionPath = $this->arrayManager->findPath(
-            MagentoCustomOptions::CONTAINER_OPTION,
-            $this->meta,
-            null,
-            'children'
-        );
-
-        if ($descriptionPath) {
-            $descriptionContainer = $descriptionPath . '/' . MagentoCustomOptions::GRID_TYPE_SELECT_NAME
-                . '/children/record/children/';
-
-            $this->meta = $this->arrayManager->merge(
-                $descriptionContainer,
-                $this->meta,
-                [
-                    'description' => $this->getDescriptionFieldConfig($sortOrder)
-                ]
-            );
-        }
     }
 
     /**
@@ -180,7 +121,7 @@ class CustomOptions extends AbstractModifier
                         'dataScope' => 'description',
                         'dataType' => Text::NAME,
                         'sortOrder' => $sortOrder,
-                        'rows' => 3,
+                        'rows' => 2,
                         'validation' => [
                             'required-entry' => false
                         ],

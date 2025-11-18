@@ -32,7 +32,7 @@
             <argument name="modifiers" xsi:type="array">
                 <item name="sickdaflip_product_options_media" xsi:type="array">
                     <item name="class" xsi:type="string">Sickdaflip\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier\CustomOptions</item>
-                    <item name="sortOrder" xsi:type="number">70</item>
+                    <item name="sortOrder" xsi:type="number">200</item>
                 </item>
             </argument>
         </arguments>
