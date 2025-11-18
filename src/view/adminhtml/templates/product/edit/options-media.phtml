@@ -19,14 +19,11 @@ $uploadUrl = $block->getUrl('productoptions/product_option/uploadImage');
 <script>
 require([
     'jquery',
-    'mage/translate',
-    'Magento_Variable/js/config-directive-generator',
-    'wysiwygAdapter'
+    'mage/translate'
 ], function($, $t) {
     'use strict';
 
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
-    var mediaGalleryUrl = '<?= $escaper->escapeJs($block->getUrl('cms/wysiwyg_images/index', ['target_element_id' => '__target__'])) ?>';
 
     /**
      * Convert absolute path to relative path
@@ -75,11 +72,7 @@ require([
             var $uploadBtn = $('<button type="button" class="action-default scalable" title="' + $t('Upload') + '">' +
                 '<span>' + $t('Upload') + '</span></button>');
 
-            // Gallery button
-            var $galleryBtn = $('<button type="button" class="action-default scalable" title="' + $t('Gallery') + '" style="margin-left: 5px;">' +
-                '<span>' + $t('Gallery') + '</span></button>');
-
-            $buttonContainer.append($uploadBtn).append($galleryBtn);
+            $buttonContainer.append($uploadBtn);
             $wrapper.append($buttonContainer);
 
             // Upload functionality
@@ -120,25 +113,6 @@ require([
                     complete: function() {
                         $uploadBtn.prop('disabled', false).html('<span>' + $t('Upload') + '</span>');
                         $fileInput.val('');
-                    }
-                });
-            });
-
-            // Gallery functionality using Magento's MediabrowserUtility
-            $galleryBtn.on('click', function(e) {
-                e.preventDefault();
-
-                var inputId = $input.attr('id');
-                var url = mediaGalleryUrl.replace('__target__', inputId);
-
-                MediabrowserUtility.openDialog(url, false, false, $t('Media Gallery'), {
-                    closed: function() {
-                        // Convert to relative path after selection
-                        var currentVal = $input.val();
-                        var relativePath = toRelativePath(currentVal);
-                        if (relativePath !== currentVal) {
-                            $input.val(relativePath);
-                        }
                     }
                 });
             });
