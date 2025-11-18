@@ -17,13 +17,23 @@ use Magento\Ui\Component\Form\Element\DataType\Text;
 use Magento\Ui\Component\Form\Element\Input;
 use Magento\Ui\Component\Form\Element\Textarea;
 use Magento\Ui\Component\Form\Field;
+use Psr\Log\LoggerInterface;
 
 class CustomOptions extends AbstractModifier
 {
-    const GROUP_CUSTOM_OPTIONS_NAME = 'custom_options';
-    const GRID_OPTIONS_NAME = 'options';
-    const CONTAINER_OPTION = 'container_option';
-    const GRID_TYPE_SELECT_NAME = 'values';
+    /**
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(
+        LoggerInterface $logger
+    ) {
+        $this->logger = $logger;
+    }
 
     /**
      * @inheritdoc
@@ -38,44 +48,29 @@ class CustomOptions extends AbstractModifier
      */
     public function modifyMeta(array $meta): array
     {
-        // Full path to the option values record children
-        $path = self::GROUP_CUSTOM_OPTIONS_NAME
-            . '/children/'
-            . self::GRID_OPTIONS_NAME
-            . '/children/record/children/'
-            . self::CONTAINER_OPTION
-            . '/children/'
-            . self::GRID_TYPE_SELECT_NAME
-            . '/children/record/children';
+        $this->logger->info('ProductOptionsMedia: modifyMeta called');
+        $this->logger->info('ProductOptionsMedia: meta keys = ' . implode(', ', array_keys($meta)));
 
-        if (isset($meta[self::GROUP_CUSTOM_OPTIONS_NAME])) {
-            $meta = $this->addFieldsToPath($meta, $path);
+        if (!isset($meta['custom_options'])) {
+            $this->logger->info('ProductOptionsMedia: custom_options not found in meta');
+            return $meta;
         }
 
-        return $meta;
-    }
+        $this->logger->info('ProductOptionsMedia: custom_options found');
 
-    /**
-     * Add image and description fields to specified path
-     *
-     * @param array $meta
-     * @param string $path
-     * @return array
-     */
-    private function addFieldsToPath(array $meta, string $path): array
-    {
-        $pathParts = explode('/', $path);
-        $current = &$meta;
-
-        foreach ($pathParts as $part) {
-            if (!isset($current[$part])) {
-                $current[$part] = [];
+        // Check the path exists
+        $path = &$meta['custom_options'];
+        if (isset($path['children']['options']['children']['record']['children']['container_option']['children']['values']['children']['record']['children'])) {
+            $this->logger->info('ProductOptionsMedia: Full path exists, adding fields');
+            $path['children']['options']['children']['record']['children']['container_option']['children']['values']['children']['record']['children']['image'] = $this->getImageFieldConfig(45);
+            $path['children']['options']['children']['record']['children']['container_option']['children']['values']['children']['record']['children']['description'] = $this->getDescriptionFieldConfig(46);
+        } else {
+            $this->logger->info('ProductOptionsMedia: Path does not exist');
+            // Log what does exist
+            if (isset($path['children'])) {
+                $this->logger->info('ProductOptionsMedia: custom_options children = ' . implode(', ', array_keys($path['children'])));
             }
-            $current = &$current[$part];
         }
-
-        $current['image'] = $this->getImageFieldConfig(45);
-        $current['description'] = $this->getDescriptionFieldConfig(46);
 
         return $meta;
     }
