@@ -13,8 +13,6 @@ declare(strict_types=1);
 namespace Sickdaflip\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier;
 
 use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\AbstractModifier;
-use Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\CustomOptions as MagentoCustomOptions;
-use Magento\Framework\Stdlib\ArrayManager;
 use Magento\Ui\Component\Form\Element\DataType\Text;
 use Magento\Ui\Component\Form\Element\Input;
 use Magento\Ui\Component\Form\Element\Textarea;
@@ -22,19 +20,10 @@ use Magento\Ui\Component\Form\Field;
 
 class CustomOptions extends AbstractModifier
 {
-    /**
-     * @var ArrayManager
-     */
-    private ArrayManager $arrayManager;
-
-    /**
-     * @param ArrayManager $arrayManager
-     */
-    public function __construct(
-        ArrayManager $arrayManager
-    ) {
-        $this->arrayManager = $arrayManager;
-    }
+    const GROUP_CUSTOM_OPTIONS_NAME = 'custom_options';
+    const GRID_OPTIONS_NAME = 'options';
+    const CONTAINER_OPTION = 'container_option';
+    const GRID_TYPE_SELECT_NAME = 'values';
 
     /**
      * @inheritdoc
@@ -49,31 +38,46 @@ class CustomOptions extends AbstractModifier
      */
     public function modifyMeta(array $meta): array
     {
-        $this->meta = $meta;
+        // Full path to the option values record children
+        $path = self::GROUP_CUSTOM_OPTIONS_NAME
+            . '/children/'
+            . self::GRID_OPTIONS_NAME
+            . '/children/record/children/'
+            . self::CONTAINER_OPTION
+            . '/children/'
+            . self::GRID_TYPE_SELECT_NAME
+            . '/children/record/children';
 
-        // Path to option values grid (select/radio/checkbox options)
-        $valuePath = $this->arrayManager->findPath(
-            MagentoCustomOptions::GRID_TYPE_SELECT_NAME,
-            $this->meta,
-            null,
-            'children'
-        );
-
-        if ($valuePath) {
-            // Add fields to the record children
-            $recordPath = $valuePath . '/children/record/children';
-
-            $this->meta = $this->arrayManager->merge(
-                $recordPath,
-                $this->meta,
-                [
-                    'image' => $this->getImageFieldConfig(45),
-                    'description' => $this->getDescriptionFieldConfig(46)
-                ]
-            );
+        if (isset($meta[self::GROUP_CUSTOM_OPTIONS_NAME])) {
+            $meta = $this->addFieldsToPath($meta, $path);
         }
 
-        return $this->meta;
+        return $meta;
+    }
+
+    /**
+     * Add image and description fields to specified path
+     *
+     * @param array $meta
+     * @param string $path
+     * @return array
+     */
+    private function addFieldsToPath(array $meta, string $path): array
+    {
+        $pathParts = explode('/', $path);
+        $current = &$meta;
+
+        foreach ($pathParts as $part) {
+            if (!isset($current[$part])) {
+                $current[$part] = [];
+            }
+            $current = &$current[$part];
+        }
+
+        $current['image'] = $this->getImageFieldConfig(45);
+        $current['description'] = $this->getDescriptionFieldConfig(46);
+
+        return $meta;
     }
 
     /**
