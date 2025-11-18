@@ -30,6 +30,15 @@ require([
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
     var mediaGalleryUrl = '<?= $escaper->escapeJs($mediaGalleryUrl) ?>';
 
+    // Initialize MediabrowserUtility if not already done
+    if (typeof MediabrowserUtility === 'undefined') {
+        window.MediabrowserUtility = {
+            openDialog: function(url) {
+                window.open(url, 'MediaBrowser', 'width=1000,height=600,scrollbars=yes,resizable=yes');
+            }
+        };
+    }
+
     /**
      * Convert absolute path to relative path
      * e.g. /media/wysiwyg/image.jpg -> wysiwyg/image.jpg
@@ -133,17 +142,7 @@ require([
 
                 var url = mediaGalleryUrl.replace('TARGET_ELEMENT_ID', inputId);
 
-                // Open media browser in new window
-                var windowWidth = 1000;
-                var windowHeight = 600;
-                var windowLeft = (screen.width - windowWidth) / 2;
-                var windowTop = (screen.height - windowHeight) / 2;
-
-                window.open(
-                    url,
-                    'MediaBrowser',
-                    'width=' + windowWidth + ',height=' + windowHeight + ',left=' + windowLeft + ',top=' + windowTop + ',scrollbars=yes,resizable=yes'
-                );
+                MediabrowserUtility.openDialog(url);
             });
 
             // Watch for changes and convert to relative path
