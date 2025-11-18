@@ -19,12 +19,14 @@ $uploadUrl = $block->getUrl('productoptions/product_option/uploadImage');
 <script>
 require([
     'jquery',
-    'Magento_Ui/js/modal/modal',
-    'mage/translate'
-], function($, modal, $t) {
+    'mage/translate',
+    'Magento_Variable/js/config-directive-generator',
+    'wysiwygAdapter'
+], function($, $t) {
     'use strict';
 
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
+    var mediaGalleryUrl = '<?= $escaper->escapeJs($block->getUrl('cms/wysiwyg_images/index', ['target_element_id' => '__target__'])) ?>';
 
     function addImageButtons() {
         // Find all image input fields in the custom options values
@@ -34,6 +36,11 @@ require([
             // Skip if buttons already added
             if ($input.data('buttons-added')) {
                 return;
+            }
+
+            // Ensure input has unique ID
+            if (!$input.attr('id')) {
+                $input.attr('id', 'option_image_' + Math.random().toString(36).substr(2, 9));
             }
 
             var $wrapper = $input.parent();
@@ -94,35 +101,18 @@ require([
                 });
             });
 
-            // Gallery functionality
+            // Gallery functionality using Magento's MediabrowserUtility
             $galleryBtn.on('click', function(e) {
                 e.preventDefault();
 
-                var mediaUrl = '<?= $escaper->escapeJs($block->getUrl('cms/wysiwyg_images/index', ['target_element_id' => 'PLACEHOLDER'])) ?>';
-                mediaUrl = mediaUrl.replace('PLACEHOLDER', $input.attr('id') || 'image_' + Math.random().toString(36).substr(2, 9));
+                var inputId = $input.attr('id');
+                var url = mediaGalleryUrl.replace('__target__', inputId);
 
-                // Set temporary ID if not exists
-                if (!$input.attr('id')) {
-                    $input.attr('id', 'image_' + Math.random().toString(36).substr(2, 9));
-                    mediaUrl = mediaUrl.replace('PLACEHOLDER', $input.attr('id'));
-                }
-
-                // Open media browser in modal
-                var $modalContent = $('<div><iframe src="' + mediaUrl + '" style="width: 100%; height: 500px; border: none;"></iframe></div>');
-
-                modal({
-                    title: $t('Media Gallery'),
-                    type: 'slide',
-                    buttons: [{
-                        text: $t('Close'),
-                        class: 'action-primary',
-                        click: function() {
-                            this.closeModal();
-                        }
-                    }]
-                }, $modalContent);
-
-                $modalContent.modal('openModal');
+                MediabrowserUtility.openDialog(url, false, false, $t('Media Gallery'), {
+                    closed: function() {
+                        // Dialog closed
+                    }
+                });
             });
 
             $input.data('buttons-added', true);
