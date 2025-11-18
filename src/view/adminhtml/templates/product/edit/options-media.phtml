@@ -10,7 +10,140 @@
 
 declare(strict_types=1);
 
-// This template is kept for potential future enhancements
-// The image and description fields are now added via UI Component Modifier
-// See: Sickdaflip\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier\CustomOptions
+/** @var \Magento\Framework\View\Element\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+
+$uploadUrl = $block->getUrl('productoptions/product_option/uploadImage');
 ?>
+
+<script>
+require([
+    'jquery',
+    'Magento_Ui/js/modal/modal',
+    'mage/translate'
+], function($, modal, $t) {
+    'use strict';
+
+    var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
+
+    function addImageButtons() {
+        // Find all image input fields in the custom options values
+        $('input[name*="[values]"][name*="[image]"]').each(function() {
+            var $input = $(this);
+
+            // Skip if buttons already added
+            if ($input.data('buttons-added')) {
+                return;
+            }
+
+            var $wrapper = $input.parent();
+
+            // Create button container
+            var $buttonContainer = $('<div class="admin__field-control-buttons" style="margin-top: 5px;"></div>');
+
+            // Upload button
+            var $uploadBtn = $('<button type="button" class="action-default scalable" title="' + $t('Upload') + '">' +
+                '<span>' + $t('Upload') + '</span></button>');
+
+            // Gallery button
+            var $galleryBtn = $('<button type="button" class="action-default scalable" title="' + $t('Gallery') + '" style="margin-left: 5px;">' +
+                '<span>' + $t('Gallery') + '</span></button>');
+
+            $buttonContainer.append($uploadBtn).append($galleryBtn);
+            $wrapper.append($buttonContainer);
+
+            // Upload functionality
+            var $fileInput = $('<input type="file" accept="image/*" style="display: none;">');
+            $wrapper.append($fileInput);
+
+            $uploadBtn.on('click', function(e) {
+                e.preventDefault();
+                $fileInput.trigger('click');
+            });
+
+            $fileInput.on('change', function() {
+                var file = this.files[0];
+                if (!file) return;
+
+                var formData = new FormData();
+                formData.append('image', file);
+                formData.append('form_key', window.FORM_KEY);
+
+                $uploadBtn.prop('disabled', true).text($t('Uploading...'));
+
+                $.ajax({
+                    url: uploadUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.error) {
+                            alert(response.error);
+                        } else if (response.file) {
+                            $input.val(response.file).trigger('change');
+                        }
+                    },
+                    error: function() {
+                        alert($t('Upload failed. Please try again.'));
+                    },
+                    complete: function() {
+                        $uploadBtn.prop('disabled', false).html('<span>' + $t('Upload') + '</span>');
+                        $fileInput.val('');
+                    }
+                });
+            });
+
+            // Gallery functionality
+            $galleryBtn.on('click', function(e) {
+                e.preventDefault();
+
+                var mediaUrl = '<?= $escaper->escapeJs($block->getUrl('cms/wysiwyg_images/index', ['target_element_id' => 'PLACEHOLDER'])) ?>';
+                mediaUrl = mediaUrl.replace('PLACEHOLDER', $input.attr('id') || 'image_' + Math.random().toString(36).substr(2, 9));
+
+                // Set temporary ID if not exists
+                if (!$input.attr('id')) {
+                    $input.attr('id', 'image_' + Math.random().toString(36).substr(2, 9));
+                    mediaUrl = mediaUrl.replace('PLACEHOLDER', $input.attr('id'));
+                }
+
+                // Open media browser in modal
+                var $modalContent = $('<div><iframe src="' + mediaUrl + '" style="width: 100%; height: 500px; border: none;"></iframe></div>');
+
+                modal({
+                    title: $t('Media Gallery'),
+                    type: 'slide',
+                    buttons: [{
+                        text: $t('Close'),
+                        class: 'action-primary',
+                        click: function() {
+                            this.closeModal();
+                        }
+                    }]
+                }, $modalContent);
+
+                $modalContent.modal('openModal');
+            });
+
+            $input.data('buttons-added', true);
+        });
+    }
+
+    // Initial run
+    $(document).ready(function() {
+        setTimeout(addImageButtons, 1000);
+    });
+
+    // Watch for dynamic content
+    var observer = new MutationObserver(function(mutations) {
+        setTimeout(addImageButtons, 100);
+    });
+
+    // Observe the product form
+    var targetNode = document.querySelector('#product_form') || document.querySelector('[data-form="edit-product"]') || document.body;
+    observer.observe(targetNode, {
+        childList: true,
+        subtree: true
+    });
+});
+</script>
