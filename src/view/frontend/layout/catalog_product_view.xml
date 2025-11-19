@@ -11,11 +11,10 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="product.info.options.wrapper">
-            <referenceBlock name="product.info.options">
-                <action method="setTemplate">
-                    <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml</argument>
-                </action>
-            </referenceBlock>
+            <block class="Magento\Catalog\Block\Product\View\Options\Type\Select"
+                   name="product.info.options.select.media"
+                   as="select"
+                   template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
         </referenceBlock>
     </body>
 </page>
