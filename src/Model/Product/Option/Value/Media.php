@@ -61,12 +61,22 @@ class Media
         // Check if file exists in media directory
         $mediaDirectory = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
 
+        // If it's just a filename (no directory separator), check legacy path first
+        if (strpos($imagePath, '/') === false) {
+            $legacyPath = 'catalog/customoption/' . $imagePath;
+            if ($mediaDirectory->isFile($legacyPath)) {
+                return $this->storeManager->getStore()
+                        ->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) . $legacyPath;
+            }
+        }
+
+        // Check direct path
         if ($mediaDirectory->isFile($imagePath)) {
             return $this->storeManager->getStore()
                     ->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) . $imagePath;
         }
 
-        // Legacy path fallback (M1.9 compatibility)
+        // Legacy path fallback with basename (M1.9 compatibility)
         $legacyPath = 'catalog/customoption/' . basename($imagePath);
         if ($mediaDirectory->isFile($legacyPath)) {
             return $this->storeManager->getStore()
