@@ -10,6 +10,7 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
+        <!-- Override checkable template for radio/checkbox options -->
         <referenceBlock name="product.info.options.select" template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
     </body>
 </page>
