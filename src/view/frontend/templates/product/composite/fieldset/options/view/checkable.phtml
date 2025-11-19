@@ -141,10 +141,8 @@ if ($option): ?>
                         </div>
                     <?php endif; ?>
 
-                    <span x-html="updateOptionPrice('<?= $escaper->escapeJs($optionId) ?>', $el)">
-                        <span><?= $escaper->escapeHtml($value->getTitle()) ?></span>
-                        <span><?= /* @noEscape */ $block->formatPrice($value) ?></span>
-                    </span>
+                    <span><?= $escaper->escapeHtml($value->getTitle()) ?></span>
+                    <span><?= /* @noEscape */ $block->formatPrice($value) ?></span>
 
                     <?php if ($hasDescription): ?>
                         <button
