@@ -132,25 +132,32 @@ require([
                 e.preventDefault();
 
                 var url = mediaGalleryUrl.replace('TARGET_ELEMENT_ID', inputId);
+                var previousVal = $input.val();
 
                 MediabrowserUtility.openDialog(url, false, false, $t('Insert Image'), {
                     closed: function() {
-                        // Convert to relative path after closing
-                        var currentVal = $input.val();
-                        var relativePath = toRelativePath(currentVal);
-                        if (relativePath !== currentVal) {
-                            $input.val(relativePath);
-                        }
+                        // Wait for MediaGallery to set the value, then convert
+                        setTimeout(function() {
+                            var currentVal = $input.val();
+                            if (currentVal && currentVal !== previousVal) {
+                                var relativePath = toRelativePath(currentVal);
+                                if (relativePath !== currentVal) {
+                                    $input.val(relativePath).trigger('change');
+                                }
+                            }
+                        }, 100);
                     }
                 });
             });
 
-            // Watch for changes and convert to relative path
-            $input.on('change', function() {
+            // Watch for any changes and convert to relative path
+            $input.on('change input blur', function() {
                 var currentVal = $input.val();
-                var relativePath = toRelativePath(currentVal);
-                if (relativePath !== currentVal) {
-                    $input.val(relativePath);
+                if (currentVal) {
+                    var relativePath = toRelativePath(currentVal);
+                    if (relativePath !== currentVal) {
+                        $input.val(relativePath);
+                    }
                 }
             });
 
