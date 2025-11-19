@@ -41,13 +41,41 @@ class ValuePlugin
      */
     public function beforeSave(Value $subject): void
     {
-        // Ensure image and description are in the data array for saving
+        // Convert image path to relative path before saving
         if ($subject->hasData('image')) {
-            $subject->setData('image', $subject->getData('image'));
+            $imagePath = $subject->getData('image');
+            if ($imagePath) {
+                $imagePath = $this->toRelativePath($imagePath);
+            }
+            $subject->setData('image', $imagePath);
         }
 
         if ($subject->hasData('description')) {
             $subject->setData('description', $subject->getData('description'));
         }
+    }
+
+    /**
+     * Convert full URL or various formats to relative path
+     *
+     * @param string $path
+     * @return string
+     */
+    private function toRelativePath(string $path): string
+    {
+        // Handle full URLs (https://domain.com/media/...)
+        if (preg_match('#https?://[^/]+/media/(.+)#', $path, $matches)) {
+            return $matches[1];
+        }
+
+        // Handle Magento directive format {{media url="..."}}
+        if (preg_match('/\{\{media url="([^"]+)"\}\}/', $path, $matches)) {
+            return $matches[1];
+        }
+
+        // Remove leading /media/ or media/
+        $path = preg_replace('#^/?media/#', '', $path);
+
+        return $path;
     }
 }

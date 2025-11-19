@@ -51,9 +51,6 @@ $mediaHelper = $objectManager->get(Media::class);
                 $hasDescription = $_value->getData('description');
                 $inputType = $_option->getType() == \Magento\Catalog\Model\Product\Option::OPTION_TYPE_RADIO ? 'radio' : 'checkbox';
                 $inputName = 'options[' . $_option->getId() . ']' . ($inputType == 'checkbox' ? '[]' : '');
-
-                // DEBUG - remove after testing
-                echo '<pre>Value Data: ' . print_r($_value->getData(), true) . '</pre>';
                 ?>
 
                 <li class="option-value-item border rounded-lg p-4 hover:border-primary transition-colors
