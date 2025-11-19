@@ -103,137 +103,245 @@ Adds two columns to `catalog_product_option_type_value`:
 
 **Important:** This module does not include frontend templates. You must create the templates in your Hyva theme to display images and descriptions.
 
-Create the following template in your theme:
+#### 1. Create CSS Styles
+
+Add to your theme's CSS (e.g., in your Tailwind source file):
+
+```css
+.product-options-wrapper {
+
+    input[type='radio'], input[type='checkbox'] {
+        @apply sr-only;
+    }
+
+    input[type='radio'] + label, input[type='checkbox'] + label {
+        @apply w-full border border-primary rounded-md cursor-pointer p-2;
+    }
+
+    input[type='radio']:checked + label, input[type='checkbox']:checked + label {
+        @apply text-green-500 border-green-500;
+    }
+
+    input[type='radio']:checked + label span.text, input[type='checkbox']:checked + label span.text {
+        @apply text-green-500 border-green-500;
+        &:after {
+            content: "\2713 ";
+        }
+        .price-notice .price {
+            @apply text-green-500;
+        }
+    }
+
+}
+```
+
+**Note:** Use `@apply sr-only;` instead of `@apply hidden;` to keep inputs focusable for form validation.
+
+#### 2. Create Template
+
+Create the template in your theme:
 
 ```
 app/design/frontend/[Vendor]/[Theme]/Magento_Catalog/templates/product/composite/fieldset/options/view/checkable.phtml
 ```
 
-Example template code for Hyva Theme with Alpine.js and Tailwind CSS:
+Full template code for Hyva Theme:
 
 ```php
 <?php
 declare(strict_types=1);
 
-use Magento\Catalog\Block\Product\View\Options\Type\Select;
-use Magento\Catalog\Pricing\Price\CustomOptionPriceInterface;
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductPrice;
+use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
+use Magento\Catalog\Model\Product\Option;
+use Magento\Catalog\Pricing\Price\CustomOptionPrice;
 use Magento\Framework\Escaper;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value\Media;
 
-/** @var Select $block */
-/** @var Escaper $escaper */
-/** @var SecureHtmlRenderer $secureRenderer */
+/**
+ * @var Checkable $block
+ * @var Escaper $escaper
+ * @var ViewModelRegistry $viewModels
+ * @var SecureHtmlRenderer $secureRenderer
+ */
 
-$_option = $block->getOption();
-$_optionId = $_option->getId();
-$class = ($_option->getIsRequire()) ? 'required' : '';
-$_arraySign = '';
-$_optionType = $_option->getType();
-$count = 1;
+$product = $block->getProduct();
 
-// Get Media helper for image URLs
+/** @var ProductPrice $productPriceViewModel */
+$productPriceViewModel = $viewModels->require(ProductPrice::class);
+
+/** @var Hyva\Theme\ViewModel\HeroiconsOutline $heroicons */
+$heroicons = $viewModels->require(\Hyva\Theme\ViewModel\HeroiconsOutline::class);
+
+// Get Media helper for image URL resolution
 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-$mediaHelper = $objectManager->get(\Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value\Media::class);
+$mediaHelper = $objectManager->get(Media::class);
 
-if ($_optionType == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_CHECKBOX) {
-    $_arraySign = '[]';
-}
-?>
+$option = $block->getOption();
 
-<fieldset class="fieldset fieldset-product-options-inner <?= $escaper->escapeHtmlAttr($class) ?>"
-          x-data="{ descriptionModal: null }"
-          x-on:keydown.escape="descriptionModal = null">
-    <legend class="legend options-list-title">
-        <span><?= $escaper->escapeHtml($_option->getTitle()) ?></span>
-    </legend>
+if ($option): ?>
+    <?php
+    $configValue = $block->getPreconfiguredValue($option);
+    $optionType = $option->getType();
+    $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
+    $count = 1;
+    ?>
 
-    <div class="options-list nested" id="options-<?= $escaper->escapeHtmlAttr($_optionId) ?>-list">
-        <?php if ($_optionType == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_DROP_DOWN ||
-            $_optionType == \Magento\Catalog\Api\Data\ProductCustomOptionInterface::OPTION_TYPE_MULTIPLE): ?>
-            <!-- Select/Multi-select handling -->
-            <?php /* ... your select implementation ... */ ?>
-        <?php else: ?>
-            <!-- Radio/Checkbox with images and descriptions -->
-            <?php foreach ($_option->getValues() as $_value): ?>
-                <?php
-                $count++;
-                $_value->setProduct($block->getProduct());
-                $priceStr = $block->getFormattedPrice([
-                    'is_percent' => $_value->getPriceType() == 'percent',
-                    'pricing_value' => $_value->getPrice($_value->getPriceType() == 'percent')
-                ]);
-                $htmlValue = $_value->getOptionTypeId();
+    <div class="options-list nested" x-data="{ openModal: null }"
+         id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list" data-max-items="3">
+        <?php if ($optionType === Option::OPTION_TYPE_RADIO && !$option->getIsRequire()): ?>
+            <div class="field choice">
+                <input type="radio"
+                       id="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>"
+                       class="radio product-custom-option"
+                       name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]"
+                       value=""
+                       checked
+                       x-on:change="updateCustomOptionValue(
+                $dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>', $event.target
+               )"
+                />
+                <label class="label text-center"
+                       for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
+            <span>
+                <?= $escaper->escapeHtml(__('None')) ?>
+            </span>
+                </label>
+            </div>
+        <?php endif; ?>
+        <?php foreach ($option->getValues() as $value): ?>
+            <?php
+            $checked = '';
+            $count++;
+            if ($arraySign) {
+                $checked = is_array($configValue) && in_array($value->getOptionTypeId(), $configValue) ? 'checked' : '';
+            } else {
+                $checked = $configValue == $value->getOptionTypeId() ? 'checked' : '';
+            }
+            $dataSelector = 'options[' . $option->getId() . ']';
+            if ($arraySign) {
+                $dataSelector .= '[' . $value->getOptionTypeId() . ']';
+            }
 
-                // Get image and description
-                $imagePath = $_value->getData('image');
-                $imageUrl = $mediaHelper->getImageUrl($imagePath);
-                $description = $_value->getData('description');
-                ?>
+            $optionId = $option->getId() . '_' . $value->getOptionTypeId();
 
-                <div class="field choice flex items-start gap-4 py-3 border-b border-gray-200 last:border-0">
-                    <input type="<?= $escaper->escapeHtmlAttr($_optionType == 'radio' ? 'radio' : 'checkbox') ?>"
-                           class="mt-1 product-custom-option"
-                           name="options[<?= $escaper->escapeHtmlAttr($_optionId) ?>]<?= /* @noEscape */ $_arraySign ?>"
-                           id="options_<?= $escaper->escapeHtmlAttr($_optionId) ?>_<?= $escaper->escapeHtmlAttr($count) ?>"
-                           value="<?= $escaper->escapeHtmlAttr($htmlValue) ?>"
-                           <?php if ($_option->getIsRequire() && $_optionType === 'radio'): ?>required<?php endif; ?>
-                           data-price-amount="<?= $escaper->escapeHtmlAttr($_value->getPrice(true)) ?>"
-                           data-price-type="<?= $escaper->escapeHtmlAttr($_value->getPriceType()) ?>">
+            $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
+            if ($productPriceViewModel->displayPriceInclAndExclTax()) {
+                $valueBasePrice = $value->getPrice(true);
+            }
 
-                    <div class="flex-1">
-                        <label class="label cursor-pointer"
-                               for="options_<?= $escaper->escapeHtmlAttr($_optionId) ?>_<?= $escaper->escapeHtmlAttr($count) ?>">
-                            <div class="flex items-center gap-3">
-                                <?php if ($imageUrl): ?>
-                                    <img src="<?= $escaper->escapeUrl($imageUrl) ?>"
-                                         alt="<?= $escaper->escapeHtmlAttr($_value->getTitle()) ?>"
-                                         class="w-16 h-16 object-contain rounded border"
-                                         loading="lazy">
-                                <?php endif; ?>
-                                <div>
-                                    <span class="font-medium"><?= $escaper->escapeHtml($_value->getTitle()) ?></span>
-                                    <?php if ($priceStr): ?>
-                                        <span class="text-sm text-gray-600 ml-2"><?= /* @noEscape */ $priceStr ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </label>
+            // Get image and description
+            $hasImage = $value->getData('image');
+            $hasDescription = $value->getData('description');
+            $imageUrl = $hasImage ? $mediaHelper->getImageUrl($value->getData('image')) : null;
+            ?>
+            <div class="field choice <?= $hasImage ? 'with-image' : '' ?> <?= $hasDescription ? 'with-description' : '' ?>">
+                <input type="<?= $escaper->escapeHtmlAttr($optionType) ?>"
+                       class="<?= $optionType === Option::OPTION_TYPE_RADIO
+                               ? 'form-radio'
+                               : 'form-checkbox' ?>
+                       product-custom-option"
+                       name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]<?= /* @noEscape */
+                       $arraySign ?>"
+                       id="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                       value="<?= $escaper->escapeHtmlAttr($value->getOptionTypeId()) ?>"
+                        <?= $escaper->escapeHtml($checked) ?>
+                       x-ref="option-<?= $escaper->escapeHtmlAttr($option->getId() . '-' . $value->getOptionTypeId()) ?>"
+                        <?php if ($option->getIsRequire()): ?>
+                            required
+                            data-required
+                            oninvalid="this.setCustomValidity(this.dataset.validationMessage)"
+                            oninput="this.setCustomValidity('')"
+                            data-validation-message="<?= $escaper
+                                    ->escapeHtmlAttr(__("Please select one of the options.")) ?>"
+                        <?php endif; ?>
+                       data-price-amount="<?= $escaper->escapeHtmlAttr($valuePrice) ?>"
+                        <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                            data-base-price-amount="<?= $escaper->escapeHtmlAttr($valueBasePrice) ?>"
+                        <?php endif; ?>
+                       data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
+                       data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                       x-ref="option-<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                       x-on:change="updateCustomOptionValue(
+                    $dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target
+                   )"
+                />
+                <label class="label flex flex-row text-center items-center justify-center gap-x-2"
+                       for="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
+                >
+                    <?php if ($imageUrl): ?>
+                            <img
+                                src="<?= $escaper->escapeUrl($imageUrl) ?>"
+                                alt="<?= $escaper->escapeHtmlAttr($value->getTitle()) ?>"
+                                class="object-contain"
+                                loading="lazy"
+                                width="75"
+                                height="75"
+                            >
+                    <?php endif; ?>
+                    <span class="text"><?= $escaper->escapeHtml($value->getTitle()) ?> <?= /* @noEscape */ $block->formatPrice($value) ?></span>
+                </label>
+                <?php if ($hasDescription): ?>
+                    <button
+                            type="button"
+                            @click.prevent="openModal = '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
+                    >
+                        <span class="bg-primary text-sm w-6 h-6 border border-l-0 border-primary rounded-r-lg flex items-center justify-center text-white font-medium">i</span>
+                    </button>
+                    <!-- Description Modal -->
+                    <template x-teleport="body">
+                        <div
+                                x-show="openModal === '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
+                                x-cloak
+                                @keydown.escape.window="openModal = null"
+                                class="fixed inset-0 z-50 overflow-y-auto"
+                                style="display: none;"
+                        >
+                            <div class="flex items-center justify-center min-h-screen p-4">
+                                <div
+                                        x-show="openModal === '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        x-transition:leave-start="opacity-100 scale-100"
+                                        x-transition:leave-end="opacity-0 scale-95"
+                                        class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
+                                    <p class="text-lg font-bold text-gray-900 mb-4">
+                                        <?= $escaper->escapeHtml($value->getTitle()) ?>
+                                    </p>
 
-                        <?php if ($description): ?>
-                            <button type="button"
-                                    class="text-sm text-blue-600 hover:text-blue-800 mt-1"
-                                    x-on:click="descriptionModal = <?= $escaper->escapeHtmlAttr($htmlValue) ?>">
-                                <?= $escaper->escapeHtml(__('More Info')) ?>
-                            </button>
+                                    <div class="prose prose-sm max-w-none text-gray-700">
+                                        <?= /* @noEscape */ $value->getData('description') ?>
+                                    </div>
 
-                            <!-- Description Modal -->
-                            <template x-teleport="body">
-                                <div x-show="descriptionModal === <?= $escaper->escapeHtmlAttr($htmlValue) ?>"
-                                     x-transition
-                                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-                                     x-on:click.self="descriptionModal = null">
-                                    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
-                                        <div class="p-4 border-b flex justify-between items-center">
-                                            <h3 class="font-semibold"><?= $escaper->escapeHtml($_value->getTitle()) ?></h3>
-                                            <button type="button" x-on:click="descriptionModal = null" class="text-gray-400 hover:text-gray-600">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="p-4 prose prose-sm max-w-none">
-                                            <?= /* @noEscape */ $description ?>
-                                        </div>
+                                    <div class="mt-6 flex justify-end">
+                                        <button
+                                                type="button"
+                                                @click="openModal = null"
+                                                class="btn btn-primary"
+                                        >
+                                            <?= $escaper->escapeHtml(__('Close')) ?>
+                                        </button>
                                     </div>
                                 </div>
-                            </template>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+                            </div>
+                        </div>
+                    </template>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
     </div>
-</fieldset>
+    <span class="toggle-option cursor-pointer" data-translated-more="<?= $block->escapeHtml(__('Show more')); ?>"
+          data-translated-less="<?= $block->escapeHtml(__('Show less')); ?>">
+        <span class="js-show-more-text flex justify-center mt-2">
+            <?= $block->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
+        </span>
+        <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
+            <?= $block->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
+        </span>
+    </span>
+<?php endif; ?>
 ```
 
 **Path Resolution:**
@@ -337,6 +445,10 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - Run `bin/magento setup:di:compile`
 - Clear cache: `bin/magento cache:flush`
 - Check var/log for errors
+
+**Form validation error "not focusable":**
+- Use `@apply sr-only;` instead of `@apply hidden;` for hiding inputs
+- This keeps inputs accessible for browser validation
 
 ## Version History
 
