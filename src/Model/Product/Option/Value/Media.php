@@ -52,6 +52,9 @@ class Media
             return null;
         }
 
+        // Convert full URL to relative path
+        $imagePath = $this->toRelativePath($imagePath);
+
         // Remove leading slash if present
         $imagePath = ltrim($imagePath, '/');
 
@@ -72,6 +75,30 @@ class Media
 
         // Return null if file not found
         return null;
+    }
+
+    /**
+     * Convert full URL or various formats to relative path
+     *
+     * @param string $path
+     * @return string
+     */
+    private function toRelativePath(string $path): string
+    {
+        // Handle full URLs (https://domain.com/media/...)
+        if (preg_match('#https?://[^/]+/media/(.+)#', $path, $matches)) {
+            return $matches[1];
+        }
+
+        // Handle Magento directive format {{media url="..."}}
+        if (preg_match('/\{\{media url="([^"]+)"\}\}/', $path, $matches)) {
+            return $matches[1];
+        }
+
+        // Remove leading /media/ or media/
+        $path = preg_replace('#^/?media/#', '', $path);
+
+        return $path;
     }
 
     /**
