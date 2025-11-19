@@ -12,13 +12,18 @@ declare(strict_types=1);
 
 use Magento\Catalog\Block\Product\View\Options\Type\Select;
 use Magento\Framework\Escaper;
+use Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value\Media;
 
 /** @var Select $block */
 /** @var Escaper $escaper */
 
 $_option = $block->getOption();
 $_store = $block->getProduct()->getStore();
-$mediaUrl = $_store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA) . 'catalog/customoption/';
+$mediaUrl = $_store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
+
+// Get Media helper for image URL resolution
+$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+$mediaHelper = $objectManager->get(Media::class);
 ?>
 
 <?php if ($_option->getType() == \Magento\Catalog\Model\Product\Option::OPTION_TYPE_RADIO
@@ -72,14 +77,17 @@ $mediaUrl = $_store->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA)
                             class="flex-1 cursor-pointer"
                         >
                             <?php if ($hasImage): ?>
-                                <div class="option-image mb-2">
-                                    <img
-                                        src="<?= $escaper->escapeUrl($mediaUrl . $_value->getData('image')) ?>"
-                                        alt="<?= $escaper->escapeHtmlAttr($_value->getTitle()) ?>"
-                                        class="w-20 h-20 object-cover rounded border"
-                                        loading="lazy"
-                                    >
-                                </div>
+                                <?php $imageUrl = $mediaHelper->getImageUrl($_value->getData('image')); ?>
+                                <?php if ($imageUrl): ?>
+                                    <div class="option-image mb-2">
+                                        <img
+                                            src="<?= $escaper->escapeUrl($imageUrl) ?>"
+                                            alt="<?= $escaper->escapeHtmlAttr($_value->getTitle()) ?>"
+                                            class="w-20 h-20 object-cover rounded border"
+                                            loading="lazy"
+                                        >
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                             <div class="option-title font-medium text-gray-900">
