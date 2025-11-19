@@ -23,8 +23,8 @@ $mediaGalleryUrl = $block->getUrl('cms/wysiwyg_images/index', [
 require([
     'jquery',
     'mage/translate',
-    'Magento_Ui/js/modal/modal'
-], function($, $t, modal) {
+    'mage/adminhtml/browser'
+], function($, $t) {
     'use strict';
 
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
@@ -133,15 +133,7 @@ require([
 
                 var url = mediaGalleryUrl.replace('TARGET_ELEMENT_ID', inputId);
 
-                // Create modal with iframe
-                var $modalContent = $('<div class="media-browser-container"><iframe id="media_browser_iframe_' + inputId + '" src="' + url + '" style="width: 100%; height: 600px; border: none;"></iframe></div>');
-
-                var options = {
-                    type: 'slide',
-                    responsive: true,
-                    innerScroll: false,
-                    title: $t('Media Gallery'),
-                    buttons: [],
+                MediabrowserUtility.openDialog(url, false, false, $t('Insert Image'), {
                     closed: function() {
                         // Convert to relative path after closing
                         var currentVal = $input.val();
@@ -149,12 +141,8 @@ require([
                         if (relativePath !== currentVal) {
                             $input.val(relativePath);
                         }
-                        $modalContent.remove();
                     }
-                };
-
-                modal(options, $modalContent);
-                $modalContent.modal('openModal');
+                });
             });
 
             // Watch for changes and convert to relative path
