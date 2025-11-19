@@ -1,0 +1,38 @@
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file product-options-media.css
+ * @author Philipp Breitsprecher
+ * @date 18.11.25
+ * @email philippbreitsprecher@gmail.com
+ */
+
+/* Fix Media Gallery Modal layout - side-col and main-col should be side by side */
+.media-gallery-modal .main-col,
+.media-gallery-modal .side-col {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.media-gallery-modal .side-col {
+    width: 200px;
+}
+
+.media-gallery-modal .main-col {
+    width: calc(100% - 220px);
+}
+
+/* Alternative fix using flexbox */
+.media-gallery-modal .media-gallery-content,
+.media-gallery-modal > .modal-inner-wrap > .modal-content > div {
+    display: flex;
+    flex-direction: row;
+}
+
+.media-gallery-modal .side-col {
+    flex: 0 0 200px;
+}
+
+.media-gallery-modal .main-col {
+    flex: 1;
+}
