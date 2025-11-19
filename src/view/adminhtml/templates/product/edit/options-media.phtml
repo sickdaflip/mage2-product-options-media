@@ -23,21 +23,12 @@ $mediaGalleryUrl = $block->getUrl('cms/wysiwyg_images/index', [
 require([
     'jquery',
     'mage/translate',
-    'mage/adminhtml/browser'
-], function($, $t) {
+    'Magento_Ui/js/modal/modal'
+], function($, $t, modal) {
     'use strict';
 
     var uploadUrl = '<?= $escaper->escapeJs($uploadUrl) ?>';
     var mediaGalleryUrl = '<?= $escaper->escapeJs($mediaGalleryUrl) ?>';
-
-    // Initialize MediabrowserUtility if not already done
-    if (typeof MediabrowserUtility === 'undefined') {
-        window.MediabrowserUtility = {
-            openDialog: function(url) {
-                window.open(url, 'MediaBrowser', 'width=1000,height=600,scrollbars=yes,resizable=yes');
-            }
-        };
-    }
 
     /**
      * Convert absolute path to relative path
@@ -142,7 +133,28 @@ require([
 
                 var url = mediaGalleryUrl.replace('TARGET_ELEMENT_ID', inputId);
 
-                MediabrowserUtility.openDialog(url);
+                // Create modal with iframe
+                var $modalContent = $('<div class="media-browser-container"><iframe id="media_browser_iframe_' + inputId + '" src="' + url + '" style="width: 100%; height: 600px; border: none;"></iframe></div>');
+
+                var options = {
+                    type: 'slide',
+                    responsive: true,
+                    innerScroll: false,
+                    title: $t('Media Gallery'),
+                    buttons: [],
+                    closed: function() {
+                        // Convert to relative path after closing
+                        var currentVal = $input.val();
+                        var relativePath = toRelativePath(currentVal);
+                        if (relativePath !== currentVal) {
+                            $input.val(relativePath);
+                        }
+                        $modalContent.remove();
+                    }
+                };
+
+                modal(options, $modalContent);
+                $modalContent.modal('openModal');
             });
 
             // Watch for changes and convert to relative path
