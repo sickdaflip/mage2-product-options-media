@@ -1,0 +1,61 @@
+/**
+ * Product Options Media Styles
+ * For Hyvä Theme with Tailwind CSS
+ */
+
+.product-options-wrapper {
+    /* Hide radio and checkbox inputs visually but keep them accessible for screen readers and form validation */
+}
+
+.product-options-wrapper input[type='radio'],
+.product-options-wrapper input[type='checkbox'] {
+    @apply sr-only;
+}
+
+/* Label styling for radio and checkbox options */
+.product-options-wrapper input[type='radio'] + label,
+.product-options-wrapper input[type='checkbox'] + label {
+    @apply w-full border border-primary rounded-md cursor-pointer p-2 transition-colors;
+}
+
+/* Checked state styling */
+.product-options-wrapper input[type='radio']:checked + label,
+.product-options-wrapper input[type='checkbox']:checked + label {
+    @apply text-green-500 border-green-500;
+}
+
+/* Text and checkmark styling when checked */
+.product-options-wrapper input[type='radio']:checked + label span.text,
+.product-options-wrapper input[type='checkbox']:checked + label span.text {
+    @apply text-green-500 border-green-500;
+}
+
+.product-options-wrapper input[type='radio']:checked + label span.text:after,
+.product-options-wrapper input[type='checkbox']:checked + label span.text:after {
+    content: "\2713 ";
+}
+
+.product-options-wrapper input[type='radio']:checked + label span.text .price-notice .price,
+.product-options-wrapper input[type='checkbox']:checked + label span.text .price-notice .price {
+    @apply text-green-500;
+}
+
+/* Select options with images */
+.select-option-image {
+    @apply flex items-center justify-center;
+}
+
+.select-option-description {
+    @apply flex items-center;
+}
+
+/* Field with image and description */
+.field.choice.with-image,
+.field.choice.with-description {
+    @apply relative;
+}
+
+/* Toggle option button */
+.toggle-option {
+    @apply text-primary hover:text-primary-darker transition-colors;
+}

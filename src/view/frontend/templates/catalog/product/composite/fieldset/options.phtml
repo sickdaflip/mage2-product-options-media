@@ -1,0 +1,168 @@
+<?php
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Magento\Catalog\Block\Product\View\Options;
+use Magento\Catalog\Model\Product\Option;
+use Magento\Framework\Escaper;
+
+/**
+ * @var Options $block
+ * @var Escaper $escaper
+ * @var ViewModelRegistry $viewModels
+ */
+
+$product = $block->getProduct();
+$options = $block->getOptions();
+
+if (!$options) {
+    return;
+}
+?>
+
+<div class="product-options-wrapper" id="product-options-wrapper">
+    <div class="fieldset product-options" tabindex="0">
+        <?php foreach ($options as $option): ?>
+            <?php
+            $optionType = $option->getType();
+            $optionId = $option->getId();
+            ?>
+
+            <div class="field <?= $escaper->escapeHtmlAttr($optionType) ?> <?= $option->getIsRequire() ? 'required' : '' ?>"
+                 id="options-<?= $escaper->escapeHtmlAttr($optionId) ?>-container">
+
+                <label class="label"
+                       for="<?= $escaper->escapeHtmlAttr($optionType === Option::OPTION_TYPE_RADIO || $optionType === Option::OPTION_TYPE_CHECKBOX ? 'options-' . $optionId . '-list' : 'select_' . $optionId) ?>">
+                    <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+                    <?php if ($option->getIsRequire()): ?>
+                        <span class="text-required ml-1">*</span>
+                    <?php endif; ?>
+                </label>
+
+                <div class="control">
+                    <?php
+                    // Render the appropriate template based on option type
+                    switch ($optionType) {
+                        case Option::OPTION_TYPE_FIELD:
+                        case Option::OPTION_TYPE_AREA:
+                            echo $block->getOptionHtml($option);
+                            break;
+
+                        case Option::OPTION_TYPE_FILE:
+                            echo $block->getOptionHtml($option);
+                            break;
+
+                        case Option::OPTION_TYPE_DROP_DOWN:
+                        case Option::OPTION_TYPE_MULTIPLE:
+                            // Use our custom select template
+                            echo $block->getLayout()
+                                ->createBlock(\Magento\Catalog\Block\Product\View\Options\Type\Select::class)
+                                ->setOption($option)
+                                ->setProduct($product)
+                                ->setTemplate('Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml')
+                                ->toHtml();
+                            break;
+
+                        case Option::OPTION_TYPE_RADIO:
+                        case Option::OPTION_TYPE_CHECKBOX:
+                            // Use our custom checkable template
+                            echo $block->getLayout()
+                                ->createBlock(\Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable::class)
+                                ->setOption($option)
+                                ->setProduct($product)
+                                ->setTemplate('Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml')
+                                ->toHtml();
+                            break;
+
+                        case Option::OPTION_TYPE_DATE:
+                        case Option::OPTION_TYPE_DATE_TIME:
+                        case Option::OPTION_TYPE_TIME:
+                            echo $block->getOptionHtml($option);
+                            break;
+
+                        default:
+                            echo $block->getOptionHtml($option);
+                            break;
+                    }
+                    ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<script>
+    const DISPLAY_SHOW = 'flex';
+    const DISPLAY_HIDE = 'none';
+    const DEFAULT_LIMIT = 3;
+
+    function initializeOptionList(listContainer, toggleSpan) {
+        const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
+        const items = listContainer.querySelectorAll('.field.choice');
+        const moreText = toggleSpan.querySelector('.js-show-more-text');
+        const lessText = toggleSpan.querySelector('.js-show-less-text');
+
+        if (items.length <= maxItems) {
+            toggleSpan.style.display = DISPLAY_HIDE;
+            return;
+        }
+
+        // Initial hide
+        for (let i = 0; i < items.length; i++) {
+            if (i >= maxItems) {
+                items[i].style.display = DISPLAY_HIDE;
+            }
+        }
+
+        // Show all function
+        const showAll = () => {
+            for (let i = maxItems; i < items.length; i++) {
+                items[i].style.display = DISPLAY_SHOW;
+            }
+            moreText.style.display = DISPLAY_HIDE;
+            lessText.style.display = DISPLAY_SHOW;
+        };
+
+        // Hide extra function
+        const hideExtra = () => {
+            for (let i = maxItems; i < items.length; i++) {
+                items[i].style.display = DISPLAY_HIDE;
+            }
+            lessText.style.display = DISPLAY_HIDE;
+            moreText.style.display = DISPLAY_SHOW;
+        };
+
+        // Toggle click handler
+        toggleSpan.addEventListener('click', () => {
+            const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
+            if (isShowingMore) {
+                hideExtra();
+            } else {
+                showAll();
+            }
+        });
+
+        // Show all items when validation fails on hidden input
+        items.forEach((item, index) => {
+            if (index >= maxItems) {
+                const input = item.querySelector('input');
+                if (input) {
+                    input.addEventListener('invalid', (e) => {
+                        showAll();
+                    });
+                }
+            }
+        });
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleSpans = document.querySelectorAll('.toggle-option');
+        toggleSpans.forEach(spanElement => {
+            const listContainer = spanElement.previousElementSibling;
+            if (listContainer && listContainer.classList.contains('options-list')) {
+                initializeOptionList(listContainer, spanElement);
+            }
+        });
+    });
+</script>

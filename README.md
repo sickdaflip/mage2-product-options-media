@@ -101,355 +101,67 @@ Adds two columns to `catalog_product_option_type_value`:
 
 ### Frontend - Template Integration
 
-**Important:** This module does not include frontend templates. You must create the templates in your Hyva theme to display images and descriptions.
+**New:** This module now includes frontend templates for Hyvä Theme! No need to create templates in your theme.
 
-#### 1. Create CSS Styles
+The module provides the following templates:
+- **options.phtml** - Main wrapper template for all custom options
+- **checkable.phtml** - Template for radio and checkbox options (with image and description support)
+- **select.phtml** - Template for dropdown and multi-select options (with image and description support)
 
-Add to your theme's CSS (e.g., in your Tailwind source file):
+All templates are automatically loaded via `catalog_product_view.xml` layout.
 
-```css
-.product-options-wrapper {
+#### Features Included:
 
-    input[type='radio'], input[type='checkbox'] {
-        @apply sr-only;
-    }
+1. **Automatic Image Display** - Images are displayed inline with option labels
+2. **Description Modals** - Alpine.js powered modals for option descriptions
+3. **Show More/Less** - Automatically collapses options when more than 3 values
+4. **Price Calculation** - Full integration with Hyvä's price calculation system
+5. **Form Validation** - Proper HTML5 validation with accessibility support
+6. **Responsive Design** - Tailwind CSS styles included
 
-    input[type='radio'] + label, input[type='checkbox'] + label {
-        @apply w-full border border-primary rounded-md cursor-pointer p-2;
-    }
+#### Customization
 
-    input[type='radio']:checked + label, input[type='checkbox']:checked + label {
-        @apply text-green-500 border-green-500;
-    }
-
-    input[type='radio']:checked + label span.text, input[type='checkbox']:checked + label span.text {
-        @apply text-green-500 border-green-500;
-        &:after {
-            content: "\2713 ";
-        }
-        .price-notice .price {
-            @apply text-green-500;
-        }
-    }
-
-}
-```
-
-**Note:** Use `@apply sr-only;` instead of `@apply hidden;` to keep inputs focusable for form validation.
-
-#### 2. Create Template
-
-Create the template in your theme:
+If you want to customize the templates, you can override them in your theme:
 
 ```
-app/design/frontend/[Vendor]/[Theme]/Magento_Catalog/templates/product/composite/fieldset/options/view/checkable.phtml
+app/design/frontend/[Vendor]/[Theme]/Sickdaflip_ProductOptionsMedia/templates/...
 ```
 
-Full template code for Hyva Theme:
+#### Template Files
 
-```php
-<?php
-declare(strict_types=1);
+The module includes these templates (located in `view/frontend/templates/`):
 
-use Hyva\Theme\Model\ViewModelRegistry;
-use Hyva\Theme\ViewModel\ProductPrice;
-use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
-use Magento\Catalog\Model\Product\Option;
-use Magento\Catalog\Pricing\Price\CustomOptionPrice;
-use Magento\Framework\Escaper;
-use Magento\Framework\View\Helper\SecureHtmlRenderer;
-use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
-
-/**
- * @var Checkable $block
- * @var Escaper $escaper
- * @var ViewModelRegistry $viewModels
- * @var SecureHtmlRenderer $secureRenderer
- */
-
-$product = $block->getProduct();
-
-/** @var ProductPrice $productPriceViewModel */
-$productPriceViewModel = $viewModels->require(ProductPrice::class);
-
-/** @var Hyva\Theme\ViewModel\HeroiconsOutline $heroicons */
-$heroicons = $viewModels->require(\Hyva\Theme\ViewModel\HeroiconsOutline::class);
-
-/** @var MediaHelper $mediaHelper */
-$mediaHelper = $viewModels->require(MediaHelper::class);
-
-$option = $block->getOption();
-
-if ($option): ?>
-    <?php
-    $configValue = $block->getPreconfiguredValue($option);
-    $optionType = $option->getType();
-    $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
-
-    // Sammle alle Descriptions für das gemeinsame Modal
-    $descriptions = [];
-    foreach ($option->getValues() as $value) {
-        if ($value->getData('description')) {
-            $optionId = $option->getId() . '_' . $value->getOptionTypeId();
-            $descriptions[$optionId] = [
-                'title' => $value->getTitle(),
-                'description' => $value->getData('description')
-            ];
-        }
-    }
-    ?>
-
-    <div x-data="initOptionModal()"
-         x-init="descriptions = JSON.parse('<?= $escaper->escapeJs(json_encode($descriptions)) ?>')">
-
-        <div class="options-list nested"
-             id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list"
-             data-max-items="3">
-        <?php if ($optionType === Option::OPTION_TYPE_RADIO && !$option->getIsRequire()): ?>
-            <div class="field choice">
-                <input type="radio"
-                       id="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>"
-                       class="radio product-custom-option"
-                       name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]"
-                       value=""
-                       checked
-                       data-price-amount="0"
-                       data-price-type="fixed"
-                       data-option-id="<?= $escaper->escapeHtmlAttr($option->getId()) ?>_none"
-                       x-on:change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>_none', $event.target)"
-                />
-                <label class="label text-center"
-                       for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
-            <span>
-                <?= $escaper->escapeHtml(__('None')) ?>
-            </span>
-                </label>
-            </div>
-        <?php endif; ?>
-        <?php foreach ($option->getValues() as $value): ?>
-            <?php
-            $checked = '';
-            $count++;
-            if ($arraySign) {
-                $checked = is_array($configValue) && in_array($value->getOptionTypeId(), $configValue) ? 'checked' : '';
-            } else {
-                $checked = $configValue == $value->getOptionTypeId() ? 'checked' : '';
-            }
-            $dataSelector = 'options[' . $option->getId() . ']';
-            if ($arraySign) {
-                $dataSelector .= '[' . $value->getOptionTypeId() . ']';
-            }
-
-            $optionId = $option->getId() . '_' . $value->getOptionTypeId();
-
-            $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
-            if ($productPriceViewModel->displayPriceInclAndExclTax()) {
-                $valueBasePrice = $value->getPrice(true);
-            }
-
-            // Get image and description
-            $hasImage = $value->getData('image');
-            $hasDescription = $value->getData('description');
-            $imageUrl = $hasImage ? $mediaHelper->getImageUrl($value->getData('image')) : null;
-            ?>
-            <div class="field choice <?= $hasImage ? 'with-image' : '' ?> <?= $hasDescription ? 'with-description' : '' ?>">
-                <input type="<?= $escaper->escapeHtmlAttr($optionType) ?>"
-                       class="<?= $optionType === Option::OPTION_TYPE_RADIO
-                               ? 'form-radio'
-                               : 'form-checkbox' ?>
-                       product-custom-option"
-                       name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]<?= /* @noEscape */
-                       $arraySign ?>"
-                       id="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
-                       value="<?= $escaper->escapeHtmlAttr($value->getOptionTypeId()) ?>"
-                        <?= $escaper->escapeHtml($checked) ?>
-                        <?php if ($option->getIsRequire()): ?>
-                            <?php if ($optionType === Option::OPTION_TYPE_RADIO): ?>
-                                required
-                            <?php endif; ?>
-                            data-required
-                            oninvalid="this.setCustomValidity(this.dataset.validationMessage)"
-                            oninput="this.setCustomValidity('')"
-                            data-validation-message="<?= $escaper
-                                    ->escapeHtmlAttr(__("Please select one of the options.")) ?>"
-                        <?php endif; ?>
-                       data-price-amount="<?= $escaper->escapeHtmlAttr($valuePrice) ?>"
-                        <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
-                            data-base-price-amount="<?= $escaper->escapeHtmlAttr($valueBasePrice) ?>"
-                        <?php endif; ?>
-                       data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
-                       x-on:change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target)"
-                />
-                <label class="label flex flex-row text-center items-center justify-center gap-x-2"
-                       for="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
-                >
-                    <?php if ($imageUrl): ?>
-                            <img
-                                src="<?= $escaper->escapeUrl($imageUrl) ?>"
-                                alt="<?= $escaper->escapeHtmlAttr($value->getTitle()) ?>"
-                                class="object-contain"
-                                loading="lazy"
-                                width="75"
-                                height="75"
-                            >
-                    <?php endif; ?>
-                    <span class="text"><?= $escaper->escapeHtml($value->getTitle()) ?> <?= /* @noEscape */ $block->formatPrice($value) ?></span>
-                </label>
-                <?php if ($hasDescription): ?>
-                    <button
-                            type="button"
-                            x-on:click.prevent="openModal = '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
-                    >
-                        <span class="bg-primary text-sm w-6 h-6 border border-l-0 border-primary rounded-r-lg flex items-center justify-center text-white font-medium">i</span>
-                    </button>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
-        </div>
-
-        <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
-              data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
-            <span class="js-show-more-text flex justify-center mt-2">
-                <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
-            </span>
-            <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
-                <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
-            </span>
-        </span>
-
-        <!-- EIN EINZIGES Modal für alle Descriptions -->
-        <template x-if="openModal !== null">
-            <div x-on:keydown.escape.window="openModal = null"
-                 class="fixed inset-0 z-50 overflow-y-auto"
-                 x-cloak>
-                <div x-on:click="openModal = null"
-                     class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
-
-                <div class="flex items-center justify-center min-h-screen p-4">
-                    <div
-                            x-data="{
-                                get modalData() {
-                                    return descriptions[openModal] || { title: '', description: '' };
-                                }
-                            }"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            x-on:click.stop
-                            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
-                        <template x-if="modalData.title">
-                            <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
-                        </template>
-
-                        <template x-if="modalData.description">
-                            <div class="prose prose-sm max-w-none text-gray-700" x-html="modalData.description"></div>
-                        </template>
-
-                        <div class="mt-6 flex justify-end">
-                            <button
-                                    type="button"
-                                    x-on:click="openModal = null"
-                                    class="btn btn-primary"
-                            >
-                                <?= $escaper->escapeHtml(__('Close')) ?>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-
-    <script>
-        function initOptionModal() {
-            return {
-                openModal: null,
-                descriptions: {}
-            }
-        }
-    </script>
-<?php endif; ?>
+**Main Options Template:**
 ```
-
-#### 3. Add JavaScript for Show More/Less
-
-Add this script to your theme (e.g., in the template footer or in a separate JS file):
-
-```javascript
-<script>
-    const DISPLAY_SHOW = 'flex';
-    const DISPLAY_HIDE = 'none';
-    const DEFAULT_LIMIT = 3;
-
-    function initializeOptionList(listContainer, toggleSpan) {
-        const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
-        const items = listContainer.querySelectorAll('.field.choice');
-        const moreText = toggleSpan.querySelector('.js-show-more-text');
-        const lessText = toggleSpan.querySelector('.js-show-less-text');
-
-        if (items.length <= maxItems) {
-            toggleSpan.style.display = DISPLAY_HIDE;
-            return;
-        }
-
-        // Initial hide
-        for (let i = 0; i < items.length; i++) {
-            if (i >= maxItems) {
-                items[i].style.display = DISPLAY_HIDE;
-            }
-        }
-
-        // Show all function
-        const showAll = () => {
-            for (let i = maxItems; i < items.length; i++) {
-                items[i].style.display = DISPLAY_SHOW;
-            }
-            moreText.style.display = DISPLAY_HIDE;
-            lessText.style.display = DISPLAY_SHOW;
-        };
-
-        // Hide extra function
-        const hideExtra = () => {
-            for (let i = maxItems; i < items.length; i++) {
-                items[i].style.display = DISPLAY_HIDE;
-            }
-            lessText.style.display = DISPLAY_HIDE;
-            moreText.style.display = DISPLAY_SHOW;
-        };
-
-        // Toggle click handler
-        toggleSpan.addEventListener('click', () => {
-            const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
-            if (isShowingMore) {
-                hideExtra();
-            } else {
-                showAll();
-            }
-        });
-
-        // Show all items when validation fails on hidden input
-        items.forEach((item, index) => {
-            if (index >= maxItems) {
-                const input = item.querySelector('input');
-                if (input) {
-                    input.addEventListener('invalid', (e) => {
-                        showAll();
-                    });
-                }
-            }
-        });
-    }
-
-    const toggleSpans = document.querySelectorAll('.toggle-option');
-    toggleSpans.forEach(spanElement => {
-        const listContainer = spanElement.previousElementSibling;
-        if (listContainer && listContainer.classList.contains('options-list')) {
-            initializeOptionList(listContainer, spanElement);
-        }
-    });
-</script>
+catalog/product/composite/fieldset/options.phtml
 ```
+Renders all custom options and delegates to type-specific templates.
+
+**Checkable Options (Radio & Checkbox):**
+```
+product/composite/fieldset/options/view/checkable.phtml
+```
+Features:
+- Image display inline with labels
+- Description modal button
+- Show more/less functionality (>3 options)
+- "None" option for non-required radio buttons
+- Full price calculation integration
+
+**Select Options (Dropdown & Multi-Select):**
+```
+product/view/options/type/select.phtml
+```
+Features:
+- Image display below select
+- Description modal button
+- Price calculation for selected values
+
+All templates use:
+- **MediaHelper ViewModel** for image URL resolution
+- **Alpine.js** for modals and interactivity
+- **x-on:** syntax (not @ shorthand) for better compatibility
+- **Tailwind CSS** for styling
 
 **Path Resolution:**
 The `Media` helper automatically resolves paths from:
