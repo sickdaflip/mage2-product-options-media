@@ -158,7 +158,7 @@ use Magento\Catalog\Model\Product\Option;
 use Magento\Catalog\Pricing\Price\CustomOptionPrice;
 use Magento\Framework\Escaper;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
-use Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value\Media;
+use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 
 /**
  * @var Checkable $block
@@ -175,9 +175,8 @@ $productPriceViewModel = $viewModels->require(ProductPrice::class);
 /** @var Hyva\Theme\ViewModel\HeroiconsOutline $heroicons */
 $heroicons = $viewModels->require(\Hyva\Theme\ViewModel\HeroiconsOutline::class);
 
-// Get Media helper for image URL resolution
-$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-$mediaHelper = $objectManager->get(Media::class);
+/** @var MediaHelper $mediaHelper */
+$mediaHelper = $viewModels->require(MediaHelper::class);
 
 $option = $block->getOption();
 
@@ -250,7 +249,9 @@ if ($option): ?>
                         <?= $escaper->escapeHtml($checked) ?>
                        x-ref="option-<?= $escaper->escapeHtmlAttr($option->getId() . '-' . $value->getOptionTypeId()) ?>"
                         <?php if ($option->getIsRequire()): ?>
-                            required
+                            <?php if ($optionType === Option::OPTION_TYPE_RADIO): ?>
+                                required
+                            <?php endif; ?>
                             data-required
                             oninvalid="this.setCustomValidity(this.dataset.validationMessage)"
                             oninput="this.setCustomValidity('')"
@@ -332,16 +333,95 @@ if ($option): ?>
             </div>
         <?php endforeach; ?>
     </div>
-    <span class="toggle-option cursor-pointer" data-translated-more="<?= $block->escapeHtml(__('Show more')); ?>"
-          data-translated-less="<?= $block->escapeHtml(__('Show less')); ?>">
+    <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
+          data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
         <span class="js-show-more-text flex justify-center mt-2">
-            <?= $block->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
+            <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
         </span>
         <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
-            <?= $block->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
+            <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
         </span>
     </span>
 <?php endif; ?>
+```
+
+#### 3. Add JavaScript for Show More/Less
+
+Add this script to your theme (e.g., in the template footer or in a separate JS file):
+
+```javascript
+<script>
+    const DISPLAY_SHOW = 'flex';
+    const DISPLAY_HIDE = 'none';
+    const DEFAULT_LIMIT = 3;
+
+    function initializeOptionList(listContainer, toggleSpan) {
+        const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
+        const items = listContainer.querySelectorAll('.field.choice');
+        const moreText = toggleSpan.querySelector('.js-show-more-text');
+        const lessText = toggleSpan.querySelector('.js-show-less-text');
+
+        if (items.length <= maxItems) {
+            toggleSpan.style.display = DISPLAY_HIDE;
+            return;
+        }
+
+        // Initial hide
+        for (let i = 0; i < items.length; i++) {
+            if (i >= maxItems) {
+                items[i].style.display = DISPLAY_HIDE;
+            }
+        }
+
+        // Show all function
+        const showAll = () => {
+            for (let i = maxItems; i < items.length; i++) {
+                items[i].style.display = DISPLAY_SHOW;
+            }
+            moreText.style.display = DISPLAY_HIDE;
+            lessText.style.display = DISPLAY_SHOW;
+        };
+
+        // Hide extra function
+        const hideExtra = () => {
+            for (let i = maxItems; i < items.length; i++) {
+                items[i].style.display = DISPLAY_HIDE;
+            }
+            lessText.style.display = DISPLAY_HIDE;
+            moreText.style.display = DISPLAY_SHOW;
+        };
+
+        // Toggle click handler
+        toggleSpan.addEventListener('click', () => {
+            const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
+            if (isShowingMore) {
+                hideExtra();
+            } else {
+                showAll();
+            }
+        });
+
+        // Show all items when validation fails on hidden input
+        items.forEach((item, index) => {
+            if (index >= maxItems) {
+                const input = item.querySelector('input');
+                if (input) {
+                    input.addEventListener('invalid', (e) => {
+                        showAll();
+                    });
+                }
+            }
+        });
+    }
+
+    const toggleSpans = document.querySelectorAll('.toggle-option');
+    toggleSpans.forEach(spanElement => {
+        const listContainer = spanElement.previousElementSibling;
+        if (listContainer && listContainer.classList.contains('options-list')) {
+            initializeOptionList(listContainer, spanElement);
+        }
+    });
+</script>
 ```
 
 **Path Resolution:**
@@ -398,6 +478,15 @@ Upload and Gallery buttons are added via:
 view/adminhtml/templates/product/edit/options-media.phtml
 ```
 
+### Frontend Media Helper
+
+The module provides a ViewModel for accessing image URLs in templates:
+```
+ViewModel/MediaHelper.php
+```
+
+This ViewModel is used instead of ObjectManager for proper dependency injection in templates.
+
 ## Technical Details
 
 ### Database Columns
@@ -448,7 +537,8 @@ The module automatically converts absolute URLs to relative paths when saving. T
 
 **Form validation error "not focusable":**
 - Use `@apply sr-only;` instead of `@apply hidden;` for hiding inputs
-- This keeps inputs accessible for browser validation
+- Only apply `required` attribute to radio buttons, not checkboxes (use `data-required` for Hyva validation)
+- JavaScript will automatically show hidden items when validation fails
 
 ## Version History
 
