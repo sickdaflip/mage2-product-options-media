@@ -1,210 +1,38 @@
 <?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
 declare(strict_types=1);
 
 use Hyva\Theme\Model\ViewModelRegistry;
-use Hyva\Theme\ViewModel\ProductPrice;
+use Hyva\Theme\ViewModel\CustomOption;
 use Magento\Catalog\Block\Product\View\Options\Type\Select;
-use Magento\Catalog\Model\Product\Option;
-use Magento\Catalog\Pricing\Price\CustomOptionPrice;
 use Magento\Framework\Escaper;
-use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 
-/**
- * @var Select $block
- * @var Escaper $escaper
- * @var ViewModelRegistry $viewModels
- */
-
-$product = $block->getProduct();
-
-/** @var ProductPrice $productPriceViewModel */
-$productPriceViewModel = $viewModels->require(ProductPrice::class);
-
-/** @var MediaHelper $mediaHelper */
-$mediaHelper = $viewModels->require(MediaHelper::class);
+/** @var Select $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
 
 $option = $block->getOption();
+$product = $block->getProduct();
 
-if ($option):
-    $configValue = $block->getPreconfiguredValue($option);
-    $optionType = $option->getType();
+/** @var CustomOption $customOptionsViewModel */
+$customOptionsViewModel = $viewModels->require(CustomOption::class);
 
-    // Check if any value has image or description
-    $hasAnyImage = false;
-    $hasAnyDescription = false;
-    foreach ($option->getValues() as $value) {
-        if ($value->getData('image')) {
-            $hasAnyImage = true;
-        }
-        if ($value->getData('description')) {
-            $hasAnyDescription = true;
-        }
-    }
-
-    // Sammle alle Descriptions für das gemeinsame Modal
-    $descriptions = [];
-    $images = [];
-    foreach ($option->getValues() as $value) {
-        $optionTypeId = $value->getOptionTypeId();
-
-        if ($value->getData('description')) {
-            $descriptions[$optionTypeId] = [
-                'title' => $value->getTitle(),
-                'description' => $value->getData('description')
-            ];
-        }
-
-        if ($value->getData('image')) {
-            $imageUrl = $mediaHelper->getImageUrl($value->getData('image'));
-            if ($imageUrl) {
-                $images[$optionTypeId] = [
-                    'url' => $imageUrl,
-                    'title' => $value->getTitle()
-                ];
-            }
-        }
-    }
-    ?>
-
-    <div x-data="initSelectOption()"
-         x-init="descriptions = JSON.parse('<?= $escaper->escapeJs(json_encode($descriptions)) ?>'); images = JSON.parse('<?= $escaper->escapeJs(json_encode($images)) ?>')">
-
-        <div class="field select-option">
-            <select id="select_<?= $escaper->escapeHtmlAttr($option->getId()) ?>"
-                    class="product-custom-option"
-                    name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]<?= $optionType === Option::OPTION_TYPE_MULTIPLE ? '[]' : '' ?>"
-                    <?= $optionType === Option::OPTION_TYPE_MULTIPLE ? 'multiple' : '' ?>
-                    <?php if ($option->getIsRequire()): ?>
-                        required
-                        oninvalid="this.setCustomValidity(this.dataset.validationMessage)"
-                        oninput="this.setCustomValidity('')"
-                        data-validation-message="<?= $escaper->escapeHtmlAttr(__("Please select one of the options.")) ?>"
-                    <?php endif; ?>
-                    x-on:change="selectValue = $event.target.value; typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>', $event.target)"
-            >
-                <?php if (!$option->getIsRequire()): ?>
-                    <option value=""><?= $escaper->escapeHtml(__('-- Please Select --')) ?></option>
-                <?php endif; ?>
-
-                <?php foreach ($option->getValues() as $value): ?>
-                    <?php
-                    $optionTypeId = $value->getOptionTypeId();
-                    $selected = '';
-                    if ($optionType === Option::OPTION_TYPE_MULTIPLE) {
-                        $selected = is_array($configValue) && in_array($optionTypeId, $configValue) ? 'selected' : '';
-                    } else {
-                        $selected = $configValue == $optionTypeId ? 'selected' : '';
-                    }
-
-                    $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
-                    $valueBasePrice = null;
-                    if ($productPriceViewModel->displayPriceInclAndExclTax()) {
-                        $valueBasePrice = $value->getPrice(true);
-                    }
-
-                    // Format price display
-                    $priceDisplay = '';
-                    if ($valuePrice != 0) {
-                        $sign = ($valuePrice > 0) ? '+' : '';
-                        $priceDisplay = ' ' . $sign . $productPriceViewModel->currency($valuePrice);
-                    }
-                    ?>
-                    <option value="<?= $escaper->escapeHtmlAttr($optionTypeId) ?>"
-                            <?= $escaper->escapeHtml($selected) ?>
-                            data-price-amount="<?= $escaper->escapeHtmlAttr($valuePrice) ?>"
-                            <?php if ($valueBasePrice !== null): ?>
-                                data-base-price-amount="<?= $escaper->escapeHtmlAttr($valueBasePrice) ?>"
-                            <?php endif; ?>
-                            data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
-                    >
-                        <?= $escaper->escapeHtml($value->getTitle()) ?><?= /* @noEscape */ $priceDisplay ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <?php if ($hasAnyImage || $hasAnyDescription): ?>
-                <div class="mt-4 flex gap-4">
-                    <!-- Image display -->
-                    <template x-if="selectValue && images[selectValue]">
-                        <div class="select-option-image">
-                            <img :src="images[selectValue].url"
-                                 :alt="images[selectValue].title"
-                                 class="object-contain"
-                                 loading="lazy"
-                                 width="150"
-                                 height="150"
-                            >
-                        </div>
-                    </template>
-
-                    <!-- Description button -->
-                    <template x-if="selectValue && descriptions[selectValue]">
-                        <div class="select-option-description">
-                            <button
-                                    type="button"
-                                    x-on:click.prevent="openModal = selectValue"
-                                    class="btn btn-secondary btn-sm"
-                            >
-                                <?= $escaper->escapeHtml(__('More Information')) ?>
-                            </button>
-                        </div>
-                    </template>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Modal für Description -->
-        <template x-if="openModal !== null">
-            <div x-on:keydown.escape.window="openModal = null"
-                 class="fixed inset-0 z-50 overflow-y-auto"
-                 x-cloak>
-                <div x-on:click="openModal = null"
-                     class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
-
-                <div class="flex items-center justify-center min-h-screen p-4">
-                    <div
-                            x-data="{
-                                get modalData() {
-                                    return descriptions[openModal] || { title: '', description: '' };
-                                }
-                            }"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            x-on:click.stop
-                            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
-                        <template x-if="modalData.title">
-                            <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
-                        </template>
-
-                        <template x-if="modalData.description">
-                            <div class="prose prose-sm max-w-none text-gray-700" x-html="modalData.description"></div>
-                        </template>
-
-                        <div class="mt-6 flex justify-end">
-                            <button
-                                    type="button"
-                                    x-on:click="openModal = null"
-                                    class="btn btn-primary"
-                            >
-                                <?= $escaper->escapeHtml(__('Close')) ?>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
+?>
+<div class="py-2 last:mb-6">
+    <label class="labeltext-gray-700 text-center cursor-default"
+           for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>"
+    >
+        <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="sup text-sm">*</span>
+        <?php endif; ?>
+    </label>
+    <div class="text-gray-900 text-left">
+        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
     </div>
-
-    <script>
-        function initSelectOption() {
-            return {
-                openModal: null,
-                selectValue: '',
-                descriptions: {},
-                images: {}
-            }
-        }
-    </script>
-<?php endif; ?>
+</div>

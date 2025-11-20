@@ -1,162 +1,332 @@
 <?php
-declare(strict_types=1);
+/*
+* Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+* @project Mage2 GD
+* @file options.phtml
+* @author Philipp Breitsprecher
+* @date 06.10.25, 16:03
+* @email philippbreitsprecher@gmail.com
+*/
 
 use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductPage;
+use Hyva\Theme\ViewModel\ProductPrice;
 use Magento\Catalog\Block\Product\View\Options;
 use Magento\Catalog\Model\Product\Option;
 use Magento\Framework\Escaper;
 
-/**
- * @var Options $block
- * @var Escaper $escaper
- * @var ViewModelRegistry $viewModels
- */
+/** @var Escaper $escaper */
+/** @var Options $block */
+/** @var ViewModelRegistry $viewModels */
+/** @var Option $option */
+
+/** @var ProductPage $productViewModel */
+$productViewModel = $viewModels->require(ProductPage::class);
 
 $product = $block->getProduct();
-$options = $block->getOptions();
+/** @var ProductPrice $productPriceViewModel */
+$productPriceViewModel = $viewModels->require(ProductPrice::class);
+$displayTax = $productPriceViewModel->displayPriceIncludingTax();
+$options = $block->decorateArray($block->getOptions());
 
-if (!$options) {
-    return;
-}
 ?>
+<?php if (count($options)): ?>
+    <script>
+        function initOptions() {
+            return {
+                optionConfig: <?= /* @noEscape */ $block->getJsonConfig() ?>,
+                regularPriceKey: '<?= /* @noEscape */ $displayTax ? 'oldPrice' : 'baseOldPrice' ?>',
+                finalPriceKey: '<?= /* @noEscape */ $displayTax ? 'finalPrice' : 'basePrice' ?>',
+                productFinalPrice: false,
+                customOptionPrices: {},
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                productBasePrice: false,
+                customOptionBasePrices: {},
+                <?php endif; ?>
+                refs: [],
+                getFormattedOptionPrice(optionId) {
+                    if (this.customOptionPrices[optionId]) {
+                        const showSign = true;
+                        return hyva.formatPrice(this.customOptionPrices[optionId], showSign);
+                    }
+                    return false;
+                },
 
-<div class="product-options-wrapper" id="product-options-wrapper">
-    <div class="fieldset product-options" tabindex="0">
-        <?php foreach ($options as $option): ?>
-            <?php
-            $optionType = $option->getType();
-            $optionId = $option->getId();
-            ?>
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                getFormattedOptionBasePrice(optionId) {
+                    if (this.customOptionBasePrices[optionId]) {
+                        const showSign = true;
+                        return hyva.formatPrice(this.customOptionBasePrices[optionId], showSign);
+                    }
+                    return false;
+                },
+                <?php endif; ?>
 
-            <div class="field <?= $escaper->escapeHtmlAttr($optionType) ?> <?= $option->getIsRequire() ? 'required' : '' ?>"
-                 id="options-<?= $escaper->escapeHtmlAttr($optionId) ?>-container">
+                updateOptionPrice(optionId, optionPriceEl) {
+                    const container = document.createElement('div');
+                    container.innerHTML = optionPriceEl.innerHTML;
 
-                <label class="label"
-                       for="<?= $escaper->escapeHtmlAttr($optionType === Option::OPTION_TYPE_RADIO || $optionType === Option::OPTION_TYPE_CHECKBOX ? 'options-' . $optionId . '-list' : 'select_' . $optionId) ?>">
-                    <span><?= $escaper->escapeHtml($option->getTitle()) ?></span>
-                    <?php if ($option->getIsRequire()): ?>
-                        <span class="text-required ml-1">*</span>
+                    const price = this.customOptionPrices[optionId];
+
+                    if (price !== undefined) {
+                        const priceNotice = container.querySelector('.price-notice');
+
+                        if (priceNotice) {
+                            // Get the current sign (first text node)
+                            const firstTextNode = Array.from(priceNotice.childNodes)
+                                .find(node => node.nodeType === Node.TEXT_NODE);
+
+                            if (firstTextNode) {
+                                // Replace the sign based on price value
+                                firstTextNode.textContent = price < 0 ? '-' : '+';
+                            }
+                        }
+
+                        // Update the actual price value
+                        const priceEl = container.querySelector('.price-wrapper');
+                        if (priceEl) {
+                            priceEl.textContent = hyva.formatPrice(Math.abs(price));
+                        }
+                    }
+
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    const basePrice = this.customOptionBasePrices[optionId];
+
+                    if (basePrice !== undefined) {
+                        const basePriceEl = container.querySelector('.price-excluding-tax .price');
+                        if (basePriceEl) {
+                            basePriceEl.textContent = hyva.formatPrice(Math.abs(basePrice));
+                        }
+                    }
                     <?php endif; ?>
-                </label>
 
-                <div class="control">
-                    <?php
-                    // Render the appropriate template based on option type
-                    switch ($optionType) {
-                        case Option::OPTION_TYPE_FIELD:
-                        case Option::OPTION_TYPE_AREA:
-                            echo $block->getOptionHtml($option);
+                    return container.innerHTML;
+                },
+
+                calculateOptionPrices() {
+                    for (const [customOptionId, customOption] of Object.entries(this.optionConfig)) {
+                        if (customOption.prices) {
+                            this.customOptionPrices[customOptionId] = this.calculateOptionPrice(customOption, customOptionId);
+                            <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                            this.customOptionBasePrices[customOptionId] = this.calculateOptionBasePrice(customOption, customOptionId);
+                            <?php endif; ?>
+                        } else {
+                            for (const [childCustomOptionId, childCustomOption] of Object.entries(customOption)) {
+                                const key = customOptionId + '_' + childCustomOptionId;
+                                this.customOptionPrices[key] = this.calculateOptionPrice(childCustomOption, customOptionId, childCustomOptionId);
+                                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                                this.customOptionBasePrices[key] = this.calculateOptionBasePrice(childCustomOption, customOptionId, childCustomOptionId);
+                                <?php endif; ?>
+                            }
+                        }
+                    }
+
+                    window.dispatchEvent(new CustomEvent("update-custom-option-prices", {detail: this.customOptionPrices}));
+
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    window.dispatchEvent(new CustomEvent("update-custom-option-base-prices", {detail: this.customOptionBasePrices}));
+                    <?php endif; ?>
+                },
+
+                calculateOptionPrice(customOption, customOptionId, childCustomOptionId) {
+                    const customOptionCode = customOptionId + (childCustomOptionId ? '-' + childCustomOptionId : '');
+
+                    const optionElement = this.refs && this.refs['option-' + customOptionCode];
+
+                    let price = customOption.prices[this.finalPriceKey].amount;
+
+                    if (this.productFinalPrice &&
+                        optionElement &&
+                        optionElement.dataset.priceAmount &&
+                        optionElement.dataset.priceType
+                    ) {
+                        price = optionElement.dataset.priceType !== 'percent' ?
+                            optionElement.dataset.priceAmount :
+                            this.productFinalPrice * (optionElement.dataset.priceAmount / 100)
+                    }
+
+                    return price;
+                },
+
+                <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                calculateOptionBasePrice(customOption, customOptionId, childCustomOptionId) {
+                    const customOptionCode = customOptionId + (childCustomOptionId ? '-' + childCustomOptionId : '');
+
+                    const optionElement = this.refs && this.refs['option-' + customOptionCode];
+
+                    let basePrice = customOption.prices['basePrice'].amount;
+
+                    if (this.productBasePrice &&
+                        optionElement &&
+                        optionElement.dataset.basePriceAmount &&
+                        optionElement.dataset.priceType
+                    ) {
+                        basePrice = optionElement.dataset.priceType !== 'percent' ?
+                            optionElement.dataset.basePriceAmount :
+                            this.productBasePrice * (optionElement.dataset.priceAmount / 100)
+                    }
+
+                    return basePrice;
+                },
+                <?php endif; ?>
+
+                updateCustomOptionValue($dispatch, customOptionId, target) {
+                    let active;
+                    switch (target.type) {
+                        case 'text':
+                        case 'textarea':
+                        case 'file':
+                        case 'time':
+                        case 'datetime-local':
+                        case 'date':
+                            active = !!target.value;
                             break;
-
-                        case Option::OPTION_TYPE_FILE:
-                            echo $block->getOptionHtml($option);
+                        case 'hidden':
+                            // when we're configuring an item in the cart that already has an attachment
+                            // this is only needed on page-initialization
+                            active = (target.value === 'save_old')
                             break;
-
-                        case Option::OPTION_TYPE_DROP_DOWN:
-                        case Option::OPTION_TYPE_MULTIPLE:
-                            // Use our custom select template
-                            echo $block->getLayout()
-                                ->createBlock(\Magento\Catalog\Block\Product\View\Options\Type\Select::class)
-                                ->setOption($option)
-                                ->setProduct($product)
-                                ->setTemplate('Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml')
-                                ->toHtml();
+                        case 'select-one':
+                        case 'select-multiple':
+                            Array.from(target.options).forEach(option => {
+                                customOptionId = option.dataset.optionId;
+                                active = option.selected;
+                                $dispatch('update-custom-option-active', {customOptionId, active});
+                            });
+                            return;
                             break;
+                        case 'radio':
+                            target.checked && document.querySelectorAll('input[name="' + target.name + '"]')
+                                .forEach(input => {
+                                    // unset sibling radio buttons
+                                    input.dataset &&
+                                    input.dataset.optionId &&
+                                    input !== target && $dispatch('update-custom-option-active',
+                                        {
+                                            customOptionId: input.dataset.optionId,
+                                            active: false
+                                        }
+                                    );
+                                });
+                        // DO NOT BREAK
+                        // Checkbox case should also run for Radio
+                        case 'checkbox':
+                            const requiredOptions = document
+                                .querySelectorAll('input[name="' + target.name + '"][data-required]');
+                            const checkedOptionsQty = Array.from(requiredOptions)
+                                .filter(option => option.checked).length;
 
-                        case Option::OPTION_TYPE_RADIO:
-                        case Option::OPTION_TYPE_CHECKBOX:
-                            // Use our custom checkable template
-                            echo $block->getLayout()
-                                ->createBlock(\Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable::class)
-                                ->setOption($option)
-                                ->setProduct($product)
-                                ->setTemplate('Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml')
-                                ->toHtml();
-                            break;
-
-                        case Option::OPTION_TYPE_DATE:
-                        case Option::OPTION_TYPE_DATE_TIME:
-                        case Option::OPTION_TYPE_TIME:
-                            echo $block->getOptionHtml($option);
-                            break;
-
-                        default:
-                            echo $block->getOptionHtml($option);
+                            requiredOptions.forEach(input => {
+                                if (checkedOptionsQty) {
+                                    input.required = false;
+                                    input.setCustomValidity('');
+                                } else {
+                                    input.required = false;
+                                    input.setCustomValidity(input.dataset.validationMessage);
+                                }
+                            });
+                            active = target.checked;
                             break;
                     }
-                    ?>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-</div>
+                    $dispatch('update-custom-option-active', {customOptionId, active});
+                },
 
-<script>
-    const DISPLAY_SHOW = 'flex';
-    const DISPLAY_HIDE = 'none';
-    const DEFAULT_LIMIT = 3;
+                initSelectedOptions($dispatch) {
+                    Array.from(document.querySelectorAll('.product-custom-option')).forEach(customOption => {
+                        this.updateCustomOptionValue($dispatch, customOption.dataset.optionId, customOption);
+                    })
+                },
 
-    function initializeOptionList(listContainer, toggleSpan) {
-        const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
-        const items = listContainer.querySelectorAll('.field.choice');
-        const moreText = toggleSpan.querySelector('.js-show-more-text');
-        const lessText = toggleSpan.querySelector('.js-show-less-text');
-
-        if (items.length <= maxItems) {
-            toggleSpan.style.display = DISPLAY_HIDE;
-            return;
-        }
-
-        // Initial hide
-        for (let i = 0; i < items.length; i++) {
-            if (i >= maxItems) {
-                items[i].style.display = DISPLAY_HIDE;
-            }
-        }
-
-        // Show all function
-        const showAll = () => {
-            for (let i = maxItems; i < items.length; i++) {
-                items[i].style.display = DISPLAY_SHOW;
-            }
-            moreText.style.display = DISPLAY_HIDE;
-            lessText.style.display = DISPLAY_SHOW;
-        };
-
-        // Hide extra function
-        const hideExtra = () => {
-            for (let i = maxItems; i < items.length; i++) {
-                items[i].style.display = DISPLAY_HIDE;
-            }
-            lessText.style.display = DISPLAY_HIDE;
-            moreText.style.display = DISPLAY_SHOW;
-        };
-
-        // Toggle click handler
-        toggleSpan.addEventListener('click', () => {
-            const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
-            if (isShowingMore) {
-                hideExtra();
-            } else {
-                showAll();
-            }
-        });
-
-        // Show all items when validation fails on hidden input
-        items.forEach((item, index) => {
-            if (index >= maxItems) {
-                const input = item.querySelector('input');
-                if (input) {
-                    input.addEventListener('invalid', (e) => {
-                        showAll();
-                    });
+                eventListeners: {
+                    ['@update-product-final-price.window'](event) {
+                        this.productFinalPrice = event.detail;
+                        this.calculateOptionPrices();
+                    },
+                    <?php if ($productPriceViewModel->displayPriceInclAndExclTax()): ?>
+                    ['@update-product-base-price.window'](event) {
+                        this.productBasePrice = event.detail;
+                        this.calculateOptionPrices();
+                    }<?php endif; ?>
                 }
             }
-        });
-    }
+        }
 
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
+    </script>
+    <div x-data="initOptions()"
+         x-init="
+    refs = $refs;
+    $nextTick(() => { calculateOptionPrices(); initSelectedOptions($dispatch); })
+ "
+         x-bind="eventListeners"
+         class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm">
+        <?php foreach ($options as $option): ?>
+            <?= $block->getOptionHtml($option) ?>
+        <?php endforeach; ?>
+    </div>
+    <script>
+        const DISPLAY_SHOW = 'flex';
+        const DISPLAY_HIDE = 'none';
+        const DEFAULT_LIMIT = 3;
+
+        function initializeOptionList(listContainer, toggleSpan) {
+            const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
+            const items = listContainer.querySelectorAll('.field.choice');
+            const moreText = toggleSpan.querySelector('.js-show-more-text');
+            const lessText = toggleSpan.querySelector('.js-show-less-text');
+
+            if (items.length <= maxItems) {
+                toggleSpan.style.display = DISPLAY_HIDE;
+                return;
+            }
+
+            // Initial hide
+            for (let i = 0; i < items.length; i++) {
+                if (i >= maxItems) {
+                    items[i].style.display = DISPLAY_HIDE;
+                }
+            }
+
+            // Show all function
+            const showAll = () => {
+                for (let i = maxItems; i < items.length; i++) {
+                    items[i].style.display = DISPLAY_SHOW;
+                }
+                moreText.style.display = DISPLAY_HIDE;
+                lessText.style.display = DISPLAY_SHOW;
+            };
+
+            // Hide extra function
+            const hideExtra = () => {
+                for (let i = maxItems; i < items.length; i++) {
+                    items[i].style.display = DISPLAY_HIDE;
+                }
+                lessText.style.display = DISPLAY_HIDE;
+                moreText.style.display = DISPLAY_SHOW;
+            };
+
+            // Toggle click handler
+            toggleSpan.addEventListener('click', () => {
+                const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
+                if (isShowingMore) {
+                    hideExtra();
+                } else {
+                    showAll();
+                }
+            });
+
+            // Show all items when validation fails on hidden input
+            items.forEach((item, index) => {
+                if (index >= maxItems) {
+                    const input = item.querySelector('input');
+                    if (input) {
+                        input.addEventListener('invalid', (e) => {
+                            showAll();
+                        });
+                    }
+                }
+            });
+        }
+
         const toggleSpans = document.querySelectorAll('.toggle-option');
         toggleSpans.forEach(spanElement => {
             const listContainer = spanElement.previousElementSibling;
@@ -164,5 +334,5 @@ if (!$options) {
                 initializeOptionList(listContainer, spanElement);
             }
         });
-    });
-</script>
+    </script>
+<?php endif; ?>
