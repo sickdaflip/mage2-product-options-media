@@ -101,6 +101,13 @@ if ($option):
                     if ($productPriceViewModel->displayPriceInclAndExclTax()) {
                         $valueBasePrice = $value->getPrice(true);
                     }
+
+                    // Format price display
+                    $priceDisplay = '';
+                    if ($valuePrice != 0) {
+                        $sign = ($valuePrice > 0) ? '+' : '';
+                        $priceDisplay = ' ' . $sign . $productPriceViewModel->currency($valuePrice);
+                    }
                     ?>
                     <option value="<?= $escaper->escapeHtmlAttr($optionTypeId) ?>"
                             <?= $escaper->escapeHtml($selected) ?>
@@ -110,7 +117,7 @@ if ($option):
                             <?php endif; ?>
                             data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
                     >
-                        <?= $escaper->escapeHtml($value->getTitle()) ?> <?= /* @noEscape */ $block->formatPrice($value, false) ?>
+                        <?= $escaper->escapeHtml($value->getTitle()) ?><?= /* @noEscape */ $priceDisplay ?>
                     </option>
                 <?php endforeach; ?>
             </select>
