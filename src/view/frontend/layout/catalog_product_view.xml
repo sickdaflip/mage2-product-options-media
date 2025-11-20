@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file catalog_product_view.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 20.11.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noType="Magento\Framework\View\Layout\etc\page_configuration.xsd">
+    <head>
+        <!-- Load custom JS to fix price calculation for "None" radio selection -->
+        <script src="Sickdaflip_ProductOptionsMedia::js/product-options-price-fix.js" />
+    </head>
+</page>
