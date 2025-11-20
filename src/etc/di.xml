@@ -18,6 +18,14 @@
                 disabled="false"/>
     </type>
 
+    <!-- Plugin to ensure media fields are loaded in option values -->
+    <type name="Magento\Catalog\Model\Product\Option">
+        <plugin name="sickdaflip_product_options_media_option"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product\OptionPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
     <!-- Plugin to modify admin options display -->
     <type name="Magento\Catalog\Block\Adminhtml\Product\Edit\Tab\Options\Option">
         <plugin name="sickdaflip_product_options_media_admin_option"
