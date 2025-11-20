@@ -15,30 +15,25 @@
     </head>
     <body>
         <referenceBlock name="product.info.options.wrapper">
-            <!-- Remove default product options block -->
-            <referenceBlock name="product.info.options" remove="true"/>
+            <!-- Override the main options block template -->
+            <referenceBlock name="product.info.options">
+                <action method="setTemplate">
+                    <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml</argument>
+                </action>
 
-            <!-- Add our custom product options block with our templates -->
-            <block class="Magento\Catalog\Block\Product\View\Options"
-                   name="product.info.options.custom"
-                   as="options"
-                   template="Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml">
-                <!-- Remove default child blocks -->
-                <referenceBlock name="product.info.options.type.select" remove="true"/>
-                <referenceBlock name="product.info.options.type.date" remove="true"/>
-                <referenceBlock name="product.info.options.type.text" remove="true"/>
-                <referenceBlock name="product.info.options.type.file" remove="true"/>
+                <!-- Override child block templates -->
+                <referenceBlock name="select">
+                    <action method="setTemplate">
+                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml</argument>
+                    </action>
+                </referenceBlock>
 
-                <!-- Add our custom blocks with unique names -->
-                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select"
-                       name="product.info.options.type.select.custom"
-                       as="select"
-                       template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
-                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable"
-                       name="product.info.options.type.checkable.custom"
-                       as="checkable"
-                       template="Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml"/>
-            </block>
+                <referenceBlock name="checkable">
+                    <action method="setTemplate">
+                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml</argument>
+                    </action>
+                </referenceBlock>
+            </referenceBlock>
         </referenceBlock>
     </body>
 </page>
