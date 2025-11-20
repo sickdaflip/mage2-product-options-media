@@ -3,59 +3,39 @@
  * For Hyvä Theme with Tailwind CSS
  */
 
-.product-options-wrapper {
-    /* Hide radio and checkbox inputs visually but keep them accessible for screen readers and form validation */
-}
-
 .product-options-wrapper input[type='radio'],
 .product-options-wrapper input[type='checkbox'] {
-    @apply sr-only;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }
 
-/* Label styling for radio and checkbox options */
 .product-options-wrapper input[type='radio'] + label,
 .product-options-wrapper input[type='checkbox'] + label {
-    @apply w-full border border-primary rounded-md cursor-pointer p-2 transition-colors;
+    width: 100%;
+    border-width: 1px;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
 }
 
-/* Checked state styling */
 .product-options-wrapper input[type='radio']:checked + label,
 .product-options-wrapper input[type='checkbox']:checked + label {
-    @apply text-green-500 border-green-500;
-}
-
-/* Text and checkmark styling when checked */
-.product-options-wrapper input[type='radio']:checked + label span.text,
-.product-options-wrapper input[type='checkbox']:checked + label span.text {
-    @apply text-green-500 border-green-500;
+    color: rgb(34 197 94);
+    border-color: rgb(34 197 94);
 }
 
 .product-options-wrapper input[type='radio']:checked + label span.text:after,
 .product-options-wrapper input[type='checkbox']:checked + label span.text:after {
     content: "\2713 ";
-}
-
-.product-options-wrapper input[type='radio']:checked + label span.text .price-notice .price,
-.product-options-wrapper input[type='checkbox']:checked + label span.text .price-notice .price {
-    @apply text-green-500;
-}
-
-/* Select options with images */
-.select-option-image {
-    @apply flex items-center justify-center;
-}
-
-.select-option-description {
-    @apply flex items-center;
-}
-
-/* Field with image and description */
-.field.choice.with-image,
-.field.choice.with-description {
-    @apply relative;
-}
-
-/* Toggle option button */
-.toggle-option {
-    @apply text-primary hover:text-primary-darker transition-colors;
+    color: rgb(34 197 94);
 }
