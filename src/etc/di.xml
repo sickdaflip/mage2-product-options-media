@@ -33,4 +33,12 @@
                 sortOrder="10"
                 disabled="false"/>
     </type>
+
+    <!-- Plugin to add custom fields to option value collection -->
+    <type name="Magento\Catalog\Model\ResourceModel\Product\Option\Value\Collection">
+        <plugin name="sickdaflip_product_options_media_value_collection"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value\CollectionPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
 </config>
