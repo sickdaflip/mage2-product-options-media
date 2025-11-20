@@ -58,12 +58,9 @@ if ($option): ?>
     }
     ?>
 
-    <div x-data="initOptionModal()"
-         x-init="descriptions = JSON.parse('<?= $escaper->escapeJs(json_encode($descriptions)) ?>')">
-
-        <div class="options-list nested"
-             id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list"
-             data-max-items="3">
+    <div class="options-list nested"
+         id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list"
+         data-max-items="3">
             <?php if ($optionType === Option::OPTION_TYPE_RADIO && !$option->getIsRequire()): ?>
                 <div class="field choice">
                     <input type="radio"
@@ -145,7 +142,7 @@ if ($option): ?>
                     <?php if ($hasDescription): ?>
                         <button
                                 type="button"
-                                @click.prevent="openModal = '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
+                                @click.prevent="$dispatch('open-option-modal', { optionId: '<?= $escaper->escapeJs($optionId) ?>' })"
                         >
                             <span class="bg-primary text-sm w-6 h-6 border border-l-0 border-primary rounded-r-lg flex items-center justify-center text-white font-medium">i</span>
                         </button>
@@ -154,16 +151,22 @@ if ($option): ?>
             <?php endforeach; ?>
         </div>
 
-        <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
-              data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
-            <span class="js-show-more-text flex justify-center mt-2">
-                <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
-            </span>
-            <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
-                <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
-            </span>
+    <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
+          data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
+        <span class="js-show-more-text flex justify-center mt-2">
+            <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
         </span>
+        <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
+            <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
+        </span>
+    </span>
 
+    <?php if (!empty($descriptions)): ?>
+    <div x-data="{
+        openModal: null,
+        descriptions: <?= $escaper->escapeHtml(json_encode($descriptions)) ?>
+    }"
+    @open-option-modal.window="openModal = $event.detail.optionId">
         <template x-if="openModal !== null">
             <div @keydown.escape.window="openModal = null"
                  class="fixed inset-0 z-50 overflow-y-auto"
@@ -206,13 +209,5 @@ if ($option): ?>
             </div>
         </template>
     </div>
-
-    <script>
-        function initOptionModal() {
-            return {
-                openModal: null,
-                descriptions: {}
-            }
-        }
-    </script>
+    <?php endif; ?>
 <?php endif; ?>
