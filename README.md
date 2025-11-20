@@ -216,7 +216,7 @@ if ($option): ?>
                        data-price-amount="0"
                        data-price-type="fixed"
                        data-option-id="<?= $escaper->escapeHtmlAttr($option->getId()) ?>_none"
-                       @change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>_none', $event.target)"
+                       x-on:change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>_none', $event.target)"
                 />
                 <label class="label text-center"
                        for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
@@ -278,7 +278,7 @@ if ($option): ?>
                             data-base-price-amount="<?= $escaper->escapeHtmlAttr($valueBasePrice) ?>"
                         <?php endif; ?>
                        data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
-                       @change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target)"
+                       x-on:change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target)"
                 />
                 <label class="label flex flex-row text-center items-center justify-center gap-x-2"
                        for="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
@@ -298,7 +298,7 @@ if ($option): ?>
                 <?php if ($hasDescription): ?>
                     <button
                             type="button"
-                            @click.prevent="openModal = '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
+                            x-on:click.prevent="openModal = '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
                     >
                         <span class="bg-primary text-sm w-6 h-6 border border-l-0 border-primary rounded-r-lg flex items-center justify-center text-white font-medium">i</span>
                     </button>
@@ -319,10 +319,10 @@ if ($option): ?>
 
         <!-- EIN EINZIGES Modal für alle Descriptions -->
         <template x-if="openModal !== null">
-            <div @keydown.escape.window="openModal = null"
+            <div x-on:keydown.escape.window="openModal = null"
                  class="fixed inset-0 z-50 overflow-y-auto"
                  x-cloak>
-                <div @click="openModal = null"
+                <div x-on:click="openModal = null"
                      class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
 
                 <div class="flex items-center justify-center min-h-screen p-4">
@@ -336,7 +336,7 @@ if ($option): ?>
                             x-transition:enter-end="opacity-100 scale-100"
                             x-transition:leave-start="opacity-100 scale-100"
                             x-transition:leave-end="opacity-0 scale-95"
-                            @click.stop
+                            x-on:click.stop
                             class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
                         <template x-if="modalData.title">
                             <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
@@ -349,7 +349,7 @@ if ($option): ?>
                         <div class="mt-6 flex justify-end">
                             <button
                                     type="button"
-                                    @click="openModal = null"
+                                    x-on:click="openModal = null"
                                     class="btn btn-primary"
                             >
                                 <?= $escaper->escapeHtml(__('Close')) ?>
