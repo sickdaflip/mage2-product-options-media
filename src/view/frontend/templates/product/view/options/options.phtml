@@ -327,18 +327,29 @@ $options = $block->decorateArray($block->getOptions());
             });
         }
 
-        // Wait for DOM to be fully loaded and Alpine.js to initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Small delay to ensure Alpine.js has rendered everything
-            setTimeout(function() {
-                const toggleSpans = document.querySelectorAll('.toggle-option');
-                toggleSpans.forEach(spanElement => {
-                    const listContainer = spanElement.previousElementSibling;
-                    if (listContainer && listContainer.classList.contains('options-list')) {
-                        initializeOptionList(listContainer, spanElement);
-                    }
-                });
-            }, 100);
-        });
+        // Initialize after Alpine.js has fully rendered
+        function initShowMoreLess() {
+            const toggleSpans = document.querySelectorAll('.toggle-option');
+            if (toggleSpans.length === 0) {
+                // Elements not rendered yet, try again
+                setTimeout(initShowMoreLess, 50);
+                return;
+            }
+
+            toggleSpans.forEach(spanElement => {
+                const listContainer = spanElement.previousElementSibling;
+                if (listContainer && listContainer.classList.contains('options-list')) {
+                    initializeOptionList(listContainer, spanElement);
+                }
+            });
+        }
+
+        // Start initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initShowMoreLess);
+        } else {
+            // DOM already loaded
+            initShowMoreLess();
+        }
     </script>
 <?php endif; ?>
