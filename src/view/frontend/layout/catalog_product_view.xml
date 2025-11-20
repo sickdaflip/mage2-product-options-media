@@ -23,10 +23,19 @@
                    name="product.info.options.custom"
                    as="options"
                    template="Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml">
+                <!-- Remove default child blocks -->
+                <referenceBlock name="product.info.options.type.select" remove="true"/>
+                <referenceBlock name="product.info.options.type.date" remove="true"/>
+                <referenceBlock name="product.info.options.type.text" remove="true"/>
+                <referenceBlock name="product.info.options.type.file" remove="true"/>
+
+                <!-- Add our custom blocks with unique names -->
                 <block class="Magento\Catalog\Block\Product\View\Options\Type\Select"
+                       name="product.info.options.type.select.custom"
                        as="select"
                        template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
                 <block class="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable"
+                       name="product.info.options.type.checkable.custom"
                        as="checkable"
                        template="Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml"/>
             </block>
