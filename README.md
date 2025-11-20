@@ -226,21 +226,6 @@ ViewModel/MediaHelper.php
 
 This ViewModel is used instead of ObjectManager for proper dependency injection in templates.
 
-### JavaScript Price Fix
-
-The module includes a JavaScript fix for handling price resets with "None" radio selections:
-```
-view/frontend/web/js/product-options-price-fix.js
-```
-
-This script:
-- Listens for radio button changes on custom product options
-- Detects when "None" (empty value) is selected
-- Dispatches proper `update-custom-option-active` events to reset prices
-- Ensures negative price options are correctly reset to zero
-
-Loaded automatically via `catalog_product_view.xml` layout.
-
 ## Technical Details
 
 ### Database Columns
@@ -297,12 +282,6 @@ The module automatically converts absolute URLs to relative paths when saving. T
 **updateCustomOptionValue is not defined:**
 - Use `typeof updateCustomOptionValue === 'function' && updateCustomOptionValue(...)` to prevent race conditions
 - This checks if the function exists before calling it
-
-**Negative price not resetting when selecting "None":**
-- This module includes a JavaScript fix that handles the edge case where selecting a radio option with a negative price, then selecting "None" doesn't properly reset the price to zero
-- The fix is automatically loaded via `catalog_product_view.xml` layout
-- The script listens for "None" radio selection and manually dispatches price update events to ensure proper recalculation
-- No additional configuration needed - the fix is applied automatically on product pages
 
 ## Version History
 

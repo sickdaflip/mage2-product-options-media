@@ -12,8 +12,6 @@
     <head>
         <!-- Load custom CSS for product options -->
         <css src="Sickdaflip_ProductOptionsMedia::css/product-options-media.css" />
-        <!-- Load custom JS to fix price calculation for "None" radio selection -->
-        <script src="Sickdaflip_ProductOptionsMedia::js/product-options-price-fix.js" />
     </head>
     <body>
         <referenceBlock name="product.info.options.wrapper">
