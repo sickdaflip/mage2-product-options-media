@@ -133,7 +133,7 @@ The module includes these templates (located in `view/frontend/templates/`):
 
 **Main Options Template:**
 ```
-catalog/product/composite/fieldset/options.phtml
+product/view/options/options.phtml
 ```
 Renders all custom options and delegates to type-specific templates.
 

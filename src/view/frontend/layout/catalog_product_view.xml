@@ -15,7 +15,7 @@
     </head>
     <body>
         <referenceBlock name="product.info.options.wrapper">
-            <block class="Magento\Catalog\Block\Product\View\Options" name="product.info.options" as="options" template="Sickdaflip_ProductOptionsMedia::catalog/product/composite/fieldset/options.phtml">
+            <block class="Magento\Catalog\Block\Product\View\Options" name="product.info.options" as="options" template="Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml">
                 <block class="Magento\Catalog\Block\Product\View\Options\Type\Select" as="select" template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
                 <block class="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable" as="checkable" template="Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml"/>
             </block>
