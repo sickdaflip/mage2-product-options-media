@@ -44,18 +44,6 @@ if ($option): ?>
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
     $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
-
-    // Sammle alle Descriptions für das gemeinsame Modal
-    $descriptions = [];
-    foreach ($option->getValues() as $value) {
-        if ($value->getData('description')) {
-            $optionId = $option->getId() . '_' . $value->getOptionTypeId();
-            $descriptions[$optionId] = [
-                    'title' => $value->getTitle(),
-                    'description' => $value->getData('description')
-            ];
-        }
-    }
     ?>
 
     <div class="options-list nested"
@@ -160,52 +148,4 @@ if ($option): ?>
             <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
         </span>
     </span>
-
-    <?php if (!empty($descriptions)): ?>
-    <div x-data="initOptionDescriptionModal"
-         data-descriptions="<?= $escaper->escapeHtmlAttr(json_encode($descriptions)) ?>"
-         @open-option-modal.window="openModal = $event.detail.optionId">
-        <template x-if="openModal !== null">
-            <div @keydown.escape.window="openModal = null"
-                 class="fixed inset-0 z-50 overflow-y-auto"
-                 x-cloak>
-                <div @click="openModal = null"
-                     class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
-
-                <div class="flex items-center justify-center min-h-screen p-4">
-                    <div
-                            x-data="{
-                        get modalData() {
-                            return descriptions[openModal] || { title: '', description: '' };
-                        }
-                    }"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            @click.stop
-                            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
-                        <template x-if="modalData.title">
-                            <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
-                        </template>
-
-                        <template x-if="modalData.description">
-                            <div class="prose prose-sm max-w-none text-gray-700" x-html="modalData.description"></div>
-                        </template>
-
-                        <div class="mt-6 flex justify-end">
-                            <button
-                                    type="button"
-                                    @click="openModal = null"
-                                    class="btn btn-primary"
-                            >
-                                <?= $escaper->escapeHtml(__('Close')) ?>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-    <?php endif; ?>
 <?php endif; ?>
