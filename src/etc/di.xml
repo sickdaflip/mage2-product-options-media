@@ -41,4 +41,26 @@
                 sortOrder="10"
                 disabled="false"/>
     </type>
+
+    <!-- Plugins to override frontend block templates -->
+    <type name="Magento\Catalog\Block\Product\View\Options">
+        <plugin name="sickdaflip_product_options_media_options_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\OptionsPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <type name="Magento\Catalog\Block\Product\View\Options\Type\Select">
+        <plugin name="sickdaflip_product_options_media_select_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\SelectPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <type name="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable">
+        <plugin name="sickdaflip_product_options_media_checkable_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\Select\CheckablePlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
 </config>
