@@ -12,6 +12,8 @@
     <head>
         <!-- Load custom CSS for product options -->
         <css src="Sickdaflip_ProductOptionsMedia::css/product-options-media.css" />
+        <!-- Load option modal JavaScript -->
+        <script src="Sickdaflip_ProductOptionsMedia::js/option-modal.js" />
     </head>
     <body>
         <referenceBlock name="product.info.options.wrapper">

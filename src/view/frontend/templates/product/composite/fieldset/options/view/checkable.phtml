@@ -162,11 +162,9 @@ if ($option): ?>
     </span>
 
     <?php if (!empty($descriptions)): ?>
-    <div x-data="{
-        openModal: null,
-        descriptions: <?= $escaper->escapeHtml(json_encode($descriptions)) ?>
-    }"
-    @open-option-modal.window="openModal = $event.detail.optionId">
+    <div x-data="initOptionDescriptionModal"
+         data-descriptions="<?= $escaper->escapeHtmlAttr(json_encode($descriptions)) ?>"
+         @open-option-modal.window="openModal = $event.detail.optionId">
         <template x-if="openModal !== null">
             <div @keydown.escape.window="openModal = null"
                  class="fixed inset-0 z-50 overflow-y-auto"
