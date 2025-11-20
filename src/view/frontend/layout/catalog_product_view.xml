@@ -15,9 +15,20 @@
     </head>
     <body>
         <referenceBlock name="product.info.options.wrapper">
-            <block class="Magento\Catalog\Block\Product\View\Options" name="product.info.options" as="options" template="Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml">
-                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select" as="select" template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
-                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable" as="checkable" template="Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml"/>
+            <!-- Remove default product options block -->
+            <referenceBlock name="product.info.options" remove="true"/>
+
+            <!-- Add our custom product options block with our templates -->
+            <block class="Magento\Catalog\Block\Product\View\Options"
+                   name="product.info.options.custom"
+                   as="options"
+                   template="Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml">
+                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select"
+                       as="select"
+                       template="Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml"/>
+                <block class="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable"
+                       as="checkable"
+                       template="Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml"/>
             </block>
         </referenceBlock>
     </body>
