@@ -185,11 +185,26 @@ if ($option): ?>
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
     $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
-    $count = 1;
+
+    // Sammle alle Descriptions für das gemeinsame Modal
+    $descriptions = [];
+    foreach ($option->getValues() as $value) {
+        if ($value->getData('description')) {
+            $optionId = $option->getId() . '_' . $value->getOptionTypeId();
+            $descriptions[$optionId] = [
+                'title' => $value->getTitle(),
+                'description' => $value->getData('description')
+            ];
+        }
+    }
     ?>
 
-    <div class="options-list nested" x-data="{ openModal: null }"
-         id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list" data-max-items="3">
+    <div x-data="initOptionModal()"
+         x-init="descriptions = JSON.parse('<?= $escaper->escapeJs(json_encode($descriptions)) ?>')">
+
+        <div class="options-list nested"
+             id="options-<?= $escaper->escapeHtmlAttr($option->getId()) ?>-list"
+             data-max-items="3">
         <?php if ($optionType === Option::OPTION_TYPE_RADIO && !$option->getIsRequire()): ?>
             <div class="field choice">
                 <input type="radio"
@@ -198,9 +213,7 @@ if ($option): ?>
                        name="options[<?= $escaper->escapeHtmlAttr($option->getId()) ?>]"
                        value=""
                        checked
-                       x-on:change="updateCustomOptionValue(
-                $dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>', $event.target
-               )"
+                       @change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($option->getId()) ?>', $event.target)"
                 />
                 <label class="label text-center"
                        for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
@@ -247,7 +260,6 @@ if ($option): ?>
                        id="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
                        value="<?= $escaper->escapeHtmlAttr($value->getOptionTypeId()) ?>"
                         <?= $escaper->escapeHtml($checked) ?>
-                       x-ref="option-<?= $escaper->escapeHtmlAttr($option->getId() . '-' . $value->getOptionTypeId()) ?>"
                         <?php if ($option->getIsRequire()): ?>
                             <?php if ($optionType === Option::OPTION_TYPE_RADIO): ?>
                                 required
@@ -263,11 +275,7 @@ if ($option): ?>
                             data-base-price-amount="<?= $escaper->escapeHtmlAttr($valueBasePrice) ?>"
                         <?php endif; ?>
                        data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
-                       data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>"
-                       x-ref="option-<?= $escaper->escapeHtmlAttr($optionId) ?>"
-                       x-on:change="updateCustomOptionValue(
-                    $dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target
-                   )"
+                       @change="typeof updateCustomOptionValue === 'function' && updateCustomOptionValue($dispatch, '<?= $escaper->escapeHtmlAttr($optionId) ?>', $event.target)"
                 />
                 <label class="label flex flex-row text-center items-center justify-center gap-x-2"
                        for="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
@@ -291,57 +299,73 @@ if ($option): ?>
                     >
                         <span class="bg-primary text-sm w-6 h-6 border border-l-0 border-primary rounded-r-lg flex items-center justify-center text-white font-medium">i</span>
                     </button>
-                    <!-- Description Modal -->
-                    <template x-teleport="body">
-                        <div
-                                x-show="openModal === '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
-                                x-cloak
-                                @keydown.escape.window="openModal = null"
-                                class="fixed inset-0 z-50 overflow-y-auto"
-                                style="display: none;"
-                        >
-                            <div class="flex items-center justify-center min-h-screen p-4">
-                                <div
-                                        x-show="openModal === '<?= $escaper->escapeHtmlAttr($optionId) ?>'"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
-                                    <p class="text-lg font-bold text-gray-900 mb-4">
-                                        <?= $escaper->escapeHtml($value->getTitle()) ?>
-                                    </p>
-
-                                    <div class="prose prose-sm max-w-none text-gray-700">
-                                        <?= /* @noEscape */ $value->getData('description') ?>
-                                    </div>
-
-                                    <div class="mt-6 flex justify-end">
-                                        <button
-                                                type="button"
-                                                @click="openModal = null"
-                                                class="btn btn-primary"
-                                        >
-                                            <?= $escaper->escapeHtml(__('Close')) ?>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
+        </div>
+
+        <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
+              data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
+            <span class="js-show-more-text flex justify-center mt-2">
+                <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
+            </span>
+            <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
+                <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
+            </span>
+        </span>
+
+        <!-- EIN EINZIGES Modal für alle Descriptions -->
+        <template x-if="openModal !== null">
+            <div @keydown.escape.window="openModal = null"
+                 class="fixed inset-0 z-50 overflow-y-auto"
+                 x-cloak>
+                <div @click="openModal = null"
+                     class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
+
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div
+                            x-data="{
+                                get modalData() {
+                                    return descriptions[openModal] || { title: '', description: '' };
+                                }
+                            }"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            @click.stop
+                            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
+                        <template x-if="modalData.title">
+                            <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
+                        </template>
+
+                        <template x-if="modalData.description">
+                            <div class="prose prose-sm max-w-none text-gray-700" x-html="modalData.description"></div>
+                        </template>
+
+                        <div class="mt-6 flex justify-end">
+                            <button
+                                    type="button"
+                                    @click="openModal = null"
+                                    class="btn btn-primary"
+                            >
+                                <?= $escaper->escapeHtml(__('Close')) ?>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
-    <span class="toggle-option cursor-pointer" data-translated-more="<?= $escaper->escapeHtml(__('Show more')); ?>"
-          data-translated-less="<?= $escaper->escapeHtml(__('Show less')); ?>">
-        <span class="js-show-more-text flex justify-center mt-2">
-            <?= $escaper->escapeHtml(__('Show more')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmDownHtml('', 24, 24, ['aria-hidden="true"']) ?>
-        </span>
-        <span class="js-show-less-text flex justify-center mt-2" style="display: none;">
-            <?= $escaper->escapeHtml(__('Show less')); ?> <?= $escaper->escapeHtml($option->getTitle()) ?> <?= $heroicons->arrowSmUpHtml('', 24, 24, ['aria-hidden="true"']) ?>
-        </span>
-    </span>
+
+    <script>
+        function initOptionModal() {
+            return {
+                openModal: null,
+                descriptions: {}
+            }
+        }
+    </script>
 <?php endif; ?>
 ```
 
@@ -539,6 +563,10 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - Use `@apply sr-only;` instead of `@apply hidden;` for hiding inputs
 - Only apply `required` attribute to radio buttons, not checkboxes (use `data-required` for Hyva validation)
 - JavaScript will automatically show hidden items when validation fails
+
+**updateCustomOptionValue is not defined:**
+- Use `typeof updateCustomOptionValue === 'function' && updateCustomOptionValue(...)` to prevent race conditions
+- This checks if the function exists before calling it
 
 ## Version History
 
