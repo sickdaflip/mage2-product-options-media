@@ -327,12 +327,18 @@ $options = $block->decorateArray($block->getOptions());
             });
         }
 
-        const toggleSpans = document.querySelectorAll('.toggle-option');
-        toggleSpans.forEach(spanElement => {
-            const listContainer = spanElement.previousElementSibling;
-            if (listContainer && listContainer.classList.contains('options-list')) {
-                initializeOptionList(listContainer, spanElement);
-            }
+        // Wait for DOM to be fully loaded and Alpine.js to initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure Alpine.js has rendered everything
+            setTimeout(function() {
+                const toggleSpans = document.querySelectorAll('.toggle-option');
+                toggleSpans.forEach(spanElement => {
+                    const listContainer = spanElement.previousElementSibling;
+                    if (listContainer && listContainer.classList.contains('options-list')) {
+                        initializeOptionList(listContainer, spanElement);
+                    }
+                });
+            }, 100);
         });
     </script>
 <?php endif; ?>
