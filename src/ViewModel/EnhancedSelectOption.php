@@ -26,6 +26,7 @@ class EnhancedSelectOption implements ArgumentInterface
     private Escaper $escaper;
     private MediaHelper $mediaHelper;
     private PricingHelper $pricingHelper;
+    private array $preconfiguredValues = [];
 
     public function __construct(
         Escaper $escaper,
@@ -37,22 +38,32 @@ class EnhancedSelectOption implements ArgumentInterface
         $this->pricingHelper = $pricingHelper;
     }
 
-    public function getOptionHtml($option, Product $product): string
+    public function setPreconfiguredValues(array $values): self
+    {
+        $this->preconfiguredValues = $values;
+        return $this;
+    }
+
+    public function getOptionHtml($option, Product $product, $preconfiguredValue = null): string
     {
         $optionType = $option->getType();
 
+        // Get preconfigured value for this option
+        $optionId = $option->getId();
+        $preconfig = $preconfiguredValue ?? ($this->preconfiguredValues[$optionId] ?? null);
+
         if ($optionType === Option::OPTION_TYPE_DROP_DOWN) {
-            return $this->renderEnhancedSelect($option, false);
+            return $this->renderEnhancedSelect($option, false, $preconfig);
         }
 
         if ($optionType === Option::OPTION_TYPE_MULTIPLE) {
-            return $this->renderEnhancedSelect($option, true);
+            return $this->renderEnhancedSelect($option, true, $preconfig);
         }
 
         return '';
     }
 
-    private function renderEnhancedSelect(Option $option, bool $isMultiple): string
+    private function renderEnhancedSelect(Option $option, bool $isMultiple, $preconfiguredValue = null): string
     {
         $optionId = $option->getId();
         $selectId = 'select_' . $optionId;
@@ -61,6 +72,21 @@ class EnhancedSelectOption implements ArgumentInterface
         $optionsJson = $this->escaper->escapeHtmlAttr(json_encode($options));
         $arraySign = $isMultiple ? '[]' : '';
 
+        // Normalize preconfigured values to array of strings
+        $selectedValues = [];
+        if ($preconfiguredValue !== null) {
+            if (is_array($preconfiguredValue)) {
+                $selectedValues = array_map('strval', $preconfiguredValue);
+            } else {
+                $selectedValues = [(string)$preconfiguredValue];
+            }
+        }
+
+        // Build initial config for Alpine
+        $selectedConfig = $isMultiple
+            ? 'selectedMultiple: ' . json_encode($selectedValues)
+            : 'selected: ' . json_encode($selectedValues[0] ?? '');
+
         $html = <<<HTML
 <!-- Hidden original select for form submission -->
 <select name="options[{$optionId}]{$arraySign}"
@@ -68,7 +94,7 @@ class EnhancedSelectOption implements ArgumentInterface
         class="hidden product-custom-option"
         {$this->getRequiredAttr($required)}
         {$this->getMultipleAttr($isMultiple)}>
-    {$this->renderNativeOptions($option, $required)}
+    {$this->renderNativeOptions($option, $required, $selectedValues)}
 </select>
 
 <!-- Alpine.js Enhanced Select -->
@@ -77,6 +103,7 @@ class EnhancedSelectOption implements ArgumentInterface
         options: {$optionsJson},
         multiple: {$this->boolToJs($isMultiple)},
         required: {$this->boolToJs($required)},
+        {$selectedConfig},
         placeholder: '{$this->escaper->escapeJs(__($isMultiple ? 'Select options...' : 'Please select...'))}'
      })"
      @keydown.escape="close()"
@@ -246,16 +273,19 @@ HTML;
         return $options;
     }
 
-    private function renderNativeOptions(Option $option, bool $required): string
+    private function renderNativeOptions(Option $option, bool $required, array $selectedValues = []): string
     {
         $html = '';
         if (!$required) {
             $html .= '<option value="">' . $this->escaper->escapeHtml(__('-- Please Select --')) . '</option>';
         }
         foreach ($option->getValues() as $value) {
+            $valueId = (string)$value->getOptionTypeId();
+            $isSelected = in_array($valueId, $selectedValues, true);
             $html .= sprintf(
-                '<option value="%s">%s</option>',
-                $this->escaper->escapeHtmlAttr($value->getOptionTypeId()),
+                '<option value="%s"%s>%s</option>',
+                $this->escaper->escapeHtmlAttr($valueId),
+                $isSelected ? ' selected' : '',
                 $this->escaper->escapeHtml($value->getTitle())
             );
         }

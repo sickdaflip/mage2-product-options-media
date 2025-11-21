@@ -14,10 +14,8 @@
         <css src="Sickdaflip_ProductOptionsMedia::css/product-options-media.css" />
     </head>
     <body>
-        <!-- Load option modal JavaScript via template -->
+        <!-- Load enhanced select JavaScript via template -->
         <referenceContainer name="before.body.end">
-            <block name="sickdaflip.product.options.media.js"
-                   template="Sickdaflip_ProductOptionsMedia::page/js/plugins/option-modal.phtml" />
             <block name="sickdaflip.product.options.enhanced.select.js"
                    template="Sickdaflip_ProductOptionsMedia::page/js/plugins/enhanced-select.phtml" />
         </referenceContainer>

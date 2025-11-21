@@ -31,24 +31,6 @@ $options = $block->decorateArray($block->getOptions());
 
 ?>
 <?php if (count($options)): ?>
-    <?php
-    // Collect all descriptions from all options for global modal
-    $allDescriptions = [];
-    foreach ($options as $option) {
-        if ($option->getType() === \Magento\Catalog\Model\Product\Option::OPTION_TYPE_RADIO ||
-            $option->getType() === \Magento\Catalog\Model\Product\Option::OPTION_TYPE_CHECKBOX) {
-            foreach ($option->getValues() as $value) {
-                if ($value->getData('description')) {
-                    $optionId = $option->getId() . '_' . $value->getOptionTypeId();
-                    $allDescriptions[$optionId] = [
-                        'title' => $value->getTitle(),
-                        'description' => $value->getData('description')
-                    ];
-                }
-            }
-        }
-    }
-    ?>
     <script>
         function initOptions() {
             return {
@@ -276,8 +258,6 @@ $options = $block->decorateArray($block->getOptions());
     $nextTick(() => {
         calculateOptionPrices();
         initSelectedOptions($dispatch);
-        // Initialize show more/less after Alpine renders
-        setTimeout(() => { if (typeof initShowMoreLess === 'function') initShowMoreLess(); }, 100);
     })
  "
          x-bind="eventListeners"
@@ -286,53 +266,4 @@ $options = $block->decorateArray($block->getOptions());
             <?= $block->getOptionHtml($option) ?>
         <?php endforeach; ?>
     </div>
-
-    <?php if (!empty($allDescriptions)): ?>
-    <!-- Global modal for all option descriptions -->
-    <div x-data="initOptionDescriptionModal"
-         data-descriptions="<?= $escaper->escapeHtmlAttr(json_encode($allDescriptions)) ?>"
-         @open-option-modal.window="openModal = $event.detail.optionId">
-        <template x-if="openModal !== null">
-            <div @keydown.escape.window="openModal = null"
-                 class="fixed inset-0 z-50 overflow-y-auto"
-                 x-cloak>
-                <div @click="openModal = null"
-                     class="fixed inset-0 bg-black opacity-50 transition-opacity"></div>
-
-                <div class="flex items-center justify-center min-h-screen p-4">
-                    <div
-                            x-data="{
-                        get modalData() {
-                            return descriptions[openModal] || { title: '', description: '' };
-                        }
-                    }"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            @click.stop
-                            class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all max-w-lg w-full p-6 relative text-gray-700">
-                        <template x-if="modalData.title">
-                            <p class="text-lg font-bold text-gray-900 mb-4" x-text="modalData.title"></p>
-                        </template>
-
-                        <template x-if="modalData.description">
-                            <div class="prose prose-sm max-w-none text-gray-700" x-html="modalData.description"></div>
-                        </template>
-
-                        <div class="mt-6 flex justify-end">
-                            <button
-                                    type="button"
-                                    @click="openModal = null"
-                                    class="btn btn-primary"
-                            >
-                                <?= $escaper->escapeHtml(__('Close')) ?>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </div>
-    <?php endif; ?>
 <?php endif; ?>

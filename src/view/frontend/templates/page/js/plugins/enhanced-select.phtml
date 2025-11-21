@@ -16,6 +16,11 @@ use Magento\Framework\Escaper;
 ?>
 <script>
 document.addEventListener('alpine:init', () => {
+    // Prevent duplicate registration on page reload/bfcache
+    if (Alpine.data && Alpine._data && Alpine._data.enhancedSelect) {
+        return;
+    }
+
     Alpine.data('enhancedSelect', (config = {}) => ({
         isOpen: false,
         search: '',
@@ -32,7 +37,18 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.originalSelect = document.getElementById(config.selectId);
             if (this.originalSelect) {
-                this.syncFromOriginal();
+                // Only sync from original if no preconfigured values were passed
+                const hasPreconfig = this.isMultiple
+                    ? (this.selectedValues && this.selectedValues.length > 0)
+                    : (this.selectedValue && this.selectedValue !== '');
+
+                if (hasPreconfig) {
+                    // Sync preconfigured values TO the original select
+                    this.syncToOriginal();
+                } else {
+                    // Read from original select (fallback)
+                    this.syncFromOriginal();
+                }
             }
         },
 

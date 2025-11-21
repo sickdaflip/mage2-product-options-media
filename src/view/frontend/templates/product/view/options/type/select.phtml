@@ -33,6 +33,8 @@ $isEnhancedSelect = in_array($optionType, [Option::OPTION_TYPE_DROP_DOWN, Option
 if ($isEnhancedSelect):
     /** @var EnhancedSelectOption $enhancedSelectViewModel */
     $enhancedSelectViewModel = $viewModels->require(EnhancedSelectOption::class);
+    // Get preconfigured value (e.g., from cart item being edited)
+    $preconfiguredValue = $block->getPreconfiguredValue($option);
 ?>
 <div class="py-4 last:mb-6">
     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2"
@@ -43,7 +45,7 @@ if ($isEnhancedSelect):
         <?php endif; ?>
     </label>
     <div class="w-full">
-        <?= $enhancedSelectViewModel->getOptionHtml($option, $product); ?>
+        <?= $enhancedSelectViewModel->getOptionHtml($option, $product, $preconfiguredValue); ?>
     </div>
 </div>
 <?php else:
