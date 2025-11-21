@@ -1,0 +1,131 @@
+<?php
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file option-modal.phtml
+ * @author Philipp Breitsprecher
+ * @date 20.11.25
+ * @email philippbreitsprecher@gmail.com
+ */
+?>
+<script>
+/**
+ * Initialize Alpine.js data for option description modal
+ * Reads descriptions from data-descriptions attribute
+ */
+function initOptionDescriptionModal() {
+    return {
+        openModal: null,
+        descriptions: {},
+
+        init() {
+            // Read descriptions from data attribute
+            const descriptionsAttr = this.$el.dataset.descriptions;
+            if (descriptionsAttr) {
+                try {
+                    this.descriptions = JSON.parse(descriptionsAttr);
+                } catch (e) {
+                    console.error('Failed to parse option descriptions:', e);
+                    this.descriptions = {};
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Show more/less functionality for option lists
+ */
+const DISPLAY_SHOW = 'flex';
+const DISPLAY_HIDE = 'none';
+const DEFAULT_LIMIT = 3;
+
+function initializeOptionList(listContainer, toggleSpan) {
+    const maxItems = parseInt(listContainer?.dataset.maxItems, 10) || DEFAULT_LIMIT;
+    const items = listContainer.querySelectorAll('.field.choice');
+    const moreText = toggleSpan.querySelector('.js-show-more-text');
+    const lessText = toggleSpan.querySelector('.js-show-less-text');
+
+    if (items.length <= maxItems) {
+        toggleSpan.style.display = DISPLAY_HIDE;
+        return;
+    }
+
+    // Initial hide
+    for (let i = 0; i < items.length; i++) {
+        if (i >= maxItems) {
+            items[i].style.display = DISPLAY_HIDE;
+        }
+    }
+
+    // Show all function
+    const showAll = () => {
+        for (let i = maxItems; i < items.length; i++) {
+            items[i].style.display = DISPLAY_SHOW;
+        }
+        moreText.style.display = DISPLAY_HIDE;
+        lessText.style.display = DISPLAY_SHOW;
+    };
+
+    // Hide extra function
+    const hideExtra = () => {
+        for (let i = maxItems; i < items.length; i++) {
+            items[i].style.display = DISPLAY_HIDE;
+        }
+        lessText.style.display = DISPLAY_HIDE;
+        moreText.style.display = DISPLAY_SHOW;
+    };
+
+    // Toggle click handler
+    toggleSpan.addEventListener('click', () => {
+        const isShowingMore = items[maxItems] && items[maxItems].style.display !== DISPLAY_HIDE;
+        if (isShowingMore) {
+            hideExtra();
+        } else {
+            showAll();
+        }
+    });
+
+    // Show all items when validation fails on hidden input
+    items.forEach((item, index) => {
+        if (index >= maxItems) {
+            const input = item.querySelector('input');
+            if (input) {
+                input.addEventListener('invalid', (e) => {
+                    showAll();
+                });
+            }
+        }
+    });
+}
+
+// Initialize after Alpine.js has fully rendered
+let showMoreLessInitialized = false;
+let initAttempts = 0;
+const MAX_ATTEMPTS = 20; // Max 1 second (20 * 50ms)
+
+function initShowMoreLess() {
+    if (showMoreLessInitialized) {
+        return; // Already initialized
+    }
+
+    const toggleSpans = document.querySelectorAll('.toggle-option');
+    if (toggleSpans.length === 0) {
+        // Elements not rendered yet, try again
+        initAttempts++;
+        if (initAttempts < MAX_ATTEMPTS) {
+            setTimeout(initShowMoreLess, 50);
+        }
+        return;
+    }
+
+    toggleSpans.forEach(spanElement => {
+        const listContainer = spanElement.previousElementSibling;
+        if (listContainer && listContainer.classList.contains('options-list')) {
+            initializeOptionList(listContainer, spanElement);
+        }
+    });
+
+    showMoreLessInitialized = true;
+}
+</script>

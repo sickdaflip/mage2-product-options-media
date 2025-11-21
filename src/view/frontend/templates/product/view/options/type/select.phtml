@@ -1,0 +1,66 @@
+<?php
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file select.phtml
+ * @author Philipp Breitsprecher
+ * @date 21.11.25
+ * @email philippbreitsprecher@gmail.com
+ *
+ * Based on Hyvä Themes - https://hyva.io
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\CustomOption;
+use Magento\Catalog\Block\Product\View\Options\Type\Select;
+use Magento\Catalog\Model\Product\Option;
+use Magento\Framework\Escaper;
+use Sickdaflip\ProductOptionsMedia\ViewModel\EnhancedSelectOption;
+
+/** @var Select $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+$option = $block->getOption();
+$product = $block->getProduct();
+$optionType = $option->getType();
+
+// Use Enhanced Select for dropdown/multiple, fallback to Hyvä CustomOption for radio/checkbox
+$isEnhancedSelect = in_array($optionType, [Option::OPTION_TYPE_DROP_DOWN, Option::OPTION_TYPE_MULTIPLE]);
+
+if ($isEnhancedSelect):
+    /** @var EnhancedSelectOption $enhancedSelectViewModel */
+    $enhancedSelectViewModel = $viewModels->require(EnhancedSelectOption::class);
+?>
+<div class="py-4 last:mb-6">
+    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2"
+           for="select_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
+        <?= $escaper->escapeHtml($option->getTitle()) ?>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="text-red-500">*</span>
+        <?php endif; ?>
+    </label>
+    <div class="w-full">
+        <?= $enhancedSelectViewModel->getOptionHtml($option, $product); ?>
+    </div>
+</div>
+<?php else:
+    // For radio/checkbox, use standard Hyvä CustomOption ViewModel
+    /** @var CustomOption $customOptionsViewModel */
+    $customOptionsViewModel = $viewModels->require(CustomOption::class);
+?>
+<div class="py-4 last:mb-6">
+    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2"
+           for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
+        <?= $escaper->escapeHtml($option->getTitle()) ?>
+        <?php if ($option->getIsRequire()): ?>
+            <span class="text-red-500">*</span>
+        <?php endif; ?>
+    </label>
+    <div class="w-full">
+        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
+    </div>
+</div>
+<?php endif; ?>

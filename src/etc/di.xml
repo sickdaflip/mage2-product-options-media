@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file di.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 18.11.25, 18:00
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Plugin to extend product option value with media fields -->
+    <type name="Magento\Catalog\Model\Product\Option\Value">
+        <plugin name="sickdaflip_product_options_media_value"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product\Option\ValuePlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <!-- Plugin to ensure media fields are loaded in option values -->
+    <type name="Magento\Catalog\Model\Product\Option">
+        <plugin name="sickdaflip_product_options_media_option"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product\OptionPlugin"
+                sortOrder="10"
+                disabled="true"/>
+    </type>
+
+    <!-- Plugin to modify admin options display -->
+    <type name="Magento\Catalog\Block\Adminhtml\Product\Edit\Tab\Options\Option">
+        <plugin name="sickdaflip_product_options_media_admin_option"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Adminhtml\Product\Edit\Tab\Options\OptionPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <!-- Plugin to add custom fields to option value collection -->
+    <type name="Magento\Catalog\Model\ResourceModel\Product\Option\Value\Collection">
+        <plugin name="sickdaflip_product_options_media_value_collection"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value\CollectionPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <!-- Plugins to override frontend block templates -->
+    <type name="Magento\Catalog\Block\Product\View\Options">
+        <plugin name="sickdaflip_product_options_media_options_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\OptionsPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <type name="Magento\Catalog\Block\Product\View\Options\Type\Select">
+        <plugin name="sickdaflip_product_options_media_select_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\SelectPlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+
+    <type name="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable">
+        <plugin name="sickdaflip_product_options_media_checkable_block"
+                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\Select\CheckablePlugin"
+                sortOrder="10"
+                disabled="false"/>
+    </type>
+</config>

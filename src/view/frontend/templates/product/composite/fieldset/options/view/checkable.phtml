@@ -1,0 +1,328 @@
+<?php
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file checkable.phtml
+ * @author Philipp Breitsprecher
+ * @date 21.11.25
+ * @email philippbreitsprecher@gmail.com
+ *
+ * Preline-Style Dropdown with Tags for Radio/Checkbox Options
+ */
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\ProductPrice;
+use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
+use Magento\Catalog\Model\Product\Option;
+use Magento\Catalog\Pricing\Price\CustomOptionPrice;
+use Magento\Framework\Escaper;
+use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
+
+/**
+ * @var Checkable $block
+ * @var Escaper $escaper
+ * @var ViewModelRegistry $viewModels
+ */
+
+$product = $block->getProduct();
+$productPriceViewModel = $viewModels->require(ProductPrice::class);
+$mediaHelper = $viewModels->require(MediaHelper::class);
+
+$option = $block->getOption();
+
+if ($option):
+    $configValue = $block->getPreconfiguredValue($option);
+    $optionType = $option->getType();
+    $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
+    $isRadio = $optionType === Option::OPTION_TYPE_RADIO;
+    $isCheckbox = $optionType === Option::OPTION_TYPE_CHECKBOX;
+    $isRequired = $option->getIsRequire();
+    $optionId = $option->getId();
+
+    // Build options array for Alpine
+    $optionsData = [];
+
+    // Add "None" option for non-required radio
+    if ($isRadio && !$isRequired) {
+        $optionsData[] = [
+            'value' => '',
+            'title' => __('None'),
+            'price' => 0,
+            'priceFormatted' => '',
+            'image' => null,
+            'description' => null,
+        ];
+    }
+
+    foreach ($option->getValues() as $value) {
+        $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
+        $optionsData[] = [
+            'value' => (string)$value->getOptionTypeId(),
+            'title' => $value->getTitle(),
+            'price' => (float)$valuePrice,
+            'priceFormatted' => $block->formatPrice($value),
+            'image' => $value->getData('image') ? $mediaHelper->getImageUrl($value->getData('image')) : null,
+            'description' => $value->getData('description') ? strip_tags($value->getData('description')) : null,
+        ];
+    }
+?>
+
+<!-- Hidden inputs for form submission -->
+<div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
+    <?php if ($isRadio && !$isRequired): ?>
+    <input type="radio"
+           name="options[<?= $escaper->escapeHtmlAttr($optionId) ?>]"
+           value=""
+           checked
+           class="product-custom-option"
+           data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>_none" />
+    <?php endif; ?>
+    <?php foreach ($option->getValues() as $value):
+        $vid = $value->getOptionTypeId();
+        $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
+        $checked = '';
+        if ($isCheckbox) {
+            $checked = is_array($configValue) && in_array($vid, $configValue) ? 'checked' : '';
+        } else {
+            $checked = $configValue == $vid ? 'checked' : '';
+        }
+    ?>
+    <input type="<?= $escaper->escapeHtmlAttr($optionType) ?>"
+           name="options[<?= $escaper->escapeHtmlAttr($optionId) ?>]<?= /* @noEscape */ $arraySign ?>"
+           id="options_<?= $escaper->escapeHtmlAttr($optionId . '_' . $vid) ?>"
+           value="<?= $escaper->escapeHtmlAttr($vid) ?>"
+           <?= $checked ?>
+           class="product-custom-option"
+           data-price-amount="<?= $escaper->escapeHtmlAttr($valuePrice) ?>"
+           data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
+           data-option-id="<?= $escaper->escapeHtmlAttr($optionId . '_' . $vid) ?>" />
+    <?php endforeach; ?>
+</div>
+
+<!-- Alpine.js Dropdown with Tags -->
+<div x-data="{
+        isOpen: false,
+        search: '',
+        options: <?= $escaper->escapeHtmlAttr(json_encode($optionsData)) ?>,
+        selected: [],
+        isMultiple: <?= $isCheckbox ? 'true' : 'false' ?>,
+        isRequired: <?= $isRequired ? 'true' : 'false' ?>,
+        maxVisible: 4,
+        showAll: false,
+
+        init() {
+            const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
+            container.querySelectorAll('input:checked').forEach(input => {
+                this.selected.push(input.value);
+            });
+        },
+
+        get filtered() {
+            if (!this.search.trim()) return this.options;
+            const q = this.search.toLowerCase();
+            return this.options.filter(o => o.title.toLowerCase().includes(q) || (o.description && o.description.toLowerCase().includes(q)));
+        },
+        get visible() {
+            return (this.showAll || this.search.trim()) ? this.filtered : this.filtered.slice(0, this.maxVisible);
+        },
+        get hasMore() {
+            return !this.search.trim() && this.filtered.length > this.maxVisible;
+        },
+        get moreCount() {
+            return this.filtered.length - this.maxVisible;
+        },
+        get selectedOptions() {
+            return this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
+        },
+        get selectedOption() {
+            return this.options.find(o => this.selected.includes(o.value)) || null;
+        },
+        get hasSelection() {
+            return this.isMultiple ? this.selectedOptions.length > 0 : (this.selected.length > 0 && this.selected[0] !== '');
+        },
+
+        toggle(value) {
+            if (this.isMultiple) {
+                const idx = this.selected.indexOf(value);
+                if (idx > -1) {
+                    this.selected.splice(idx, 1);
+                } else {
+                    this.selected.push(value);
+                }
+            } else {
+                this.selected = [value];
+                this.isOpen = false;
+            }
+            this.sync();
+        },
+        remove(value) {
+            this.selected = this.selected.filter(v => v !== value);
+            this.sync();
+        },
+        clear() {
+            this.selected = this.isRequired ? [] : [''];
+            this.sync();
+        },
+        isSelected(value) {
+            return this.selected.includes(value);
+        },
+        sync() {
+            const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
+            container.querySelectorAll('input').forEach(input => {
+                if (input.value === '') {
+                    input.checked = this.selected.length === 0 || this.selected.includes('');
+                } else {
+                    input.checked = this.selected.includes(input.value);
+                }
+                if (input.dataset.optionId) {
+                    window.dispatchEvent(new CustomEvent('update-custom-option-active', {
+                        detail: {
+                            customOptionId: input.dataset.optionId,
+                            active: input.checked
+                        }
+                    }));
+                }
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        },
+        open() {
+            this.isOpen = true;
+            this.showAll = false;
+            this.search = '';
+            this.$nextTick(() => this.$refs.search?.focus());
+        },
+        close() {
+            this.isOpen = false;
+            this.search = '';
+        }
+     }"
+     @click.outside="close()"
+     @keydown.escape="close()"
+     class="relative">
+
+    <!-- Trigger / Wrapper -->
+    <div @click="open()"
+         class="relative min-h-[46px] ps-0.5 pe-9 flex items-center flex-wrap w-full border border-gray-200 rounded-lg text-start text-sm cursor-pointer bg-white hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 transition-colors">
+
+        <!-- Tags (Multi) -->
+        <template x-if="isMultiple">
+            <div class="flex flex-wrap items-center gap-1 p-1 flex-1">
+                <template x-for="opt in selectedOptions" :key="opt.value">
+                    <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700">
+                        <template x-if="opt.image">
+                            <img :src="opt.image" :alt="opt.title" class="size-6 me-1 rounded-full object-cover">
+                        </template>
+                        <div class="whitespace-nowrap text-gray-800 dark:text-neutral-200 text-sm px-1" x-text="opt.title"></div>
+                        <button type="button"
+                                @click.stop="remove(opt.value)"
+                                class="inline-flex shrink-0 justify-center items-center size-5 ms-1 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm dark:bg-neutral-700/50 dark:hover:bg-neutral-700 dark:text-neutral-400 cursor-pointer">
+                            <svg class="shrink-0 size-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+                <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
+                    <?= $escaper->escapeHtml(__('Select options...')) ?>
+                </span>
+            </div>
+        </template>
+
+        <!-- Single Select Display -->
+        <template x-if="!isMultiple">
+            <div class="flex items-center gap-2 py-2.5 px-3 flex-1">
+                <template x-if="hasSelection && selectedOption?.image">
+                    <img :src="selectedOption.image" :alt="selectedOption.title" class="size-6 rounded-full object-cover">
+                </template>
+                <span x-show="hasSelection" class="text-gray-800 dark:text-neutral-200" x-text="selectedOption?.title"></span>
+                <span x-show="hasSelection && selectedOption?.priceFormatted" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
+                <span x-show="!hasSelection" class="text-gray-400 dark:text-neutral-500">
+                    <?= $escaper->escapeHtml(__('Please select...')) ?>
+                </span>
+            </div>
+        </template>
+
+        <!-- Arrow -->
+        <div class="absolute top-1/2 end-3 -translate-y-1/2">
+            <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-500 transition-transform" :class="{ 'rotate-90': isOpen }" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Dropdown -->
+    <div x-show="isOpen"
+         class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
+         style="display: none;">
+
+        <!-- Search -->
+        <div class="p-2 border-b border-gray-100 dark:border-neutral-800">
+            <input type="text"
+                   x-ref="search"
+                   x-model="search"
+                   @click.stop
+                   placeholder="<?= $escaper->escapeHtmlAttr(__('Search...')) ?>"
+                   class="py-2.5 px-3 w-full rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
+        </div>
+
+        <!-- Options -->
+        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            <template x-for="opt in visible" :key="opt.value">
+                <li @click="toggle(opt.value)"
+                    :class="{ 'bg-blue-50 dark:bg-blue-900/20': isSelected(opt.value) }"
+                    class="flex items-center py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800 transition-colors">
+
+                    <!-- Image -->
+                    <template x-if="opt.image">
+                        <img :src="opt.image" :alt="opt.title" class="size-8 me-2 rounded-full object-cover">
+                    </template>
+
+                    <!-- Content -->
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" x-text="opt.title"></div>
+                        <template x-if="opt.description">
+                            <div class="text-xs text-gray-500 dark:text-neutral-500" x-text="opt.description"></div>
+                        </template>
+                    </div>
+
+                    <!-- Price -->
+                    <template x-if="opt.priceFormatted">
+                        <span class="text-sm text-gray-500 me-2" x-html="opt.priceFormatted"></span>
+                    </template>
+
+                    <!-- Selected Check -->
+                    <div class="ms-auto">
+                        <span x-show="isSelected(opt.value)" class="text-blue-600">
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                            </svg>
+                        </span>
+                    </div>
+                </li>
+            </template>
+
+            <!-- Show More -->
+            <li x-show="hasMore && !showAll"
+                @click.stop="showAll = true"
+                class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
+                <?= $escaper->escapeHtml(__('Show')) ?> <span x-text="moreCount"></span> <?= $escaper->escapeHtml(__('more')) ?>...
+            </li>
+
+            <!-- Show Less -->
+            <li x-show="showAll && filtered.length > maxVisible"
+                @click.stop="showAll = false"
+                class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
+                <?= $escaper->escapeHtml(__('Show less')) ?>
+            </li>
+
+            <!-- No Results -->
+            <li x-show="filtered.length === 0" class="py-4 px-4 text-gray-500 dark:text-neutral-400 text-center text-sm">
+                <?= $escaper->escapeHtml(__('No options found')) ?>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<?php endif; ?>

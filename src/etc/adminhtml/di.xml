@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file di.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 18.11.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- UI Component Modifier for custom options media fields -->
+    <virtualType name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\Pool">
+        <arguments>
+            <argument name="modifiers" xsi:type="array">
+                <item name="sickdaflip_product_options_media" xsi:type="array">
+                    <item name="class" xsi:type="string">Sickdaflip\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier\CustomOptions</item>
+                    <item name="sortOrder" xsi:type="number">200</item>
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+</config>

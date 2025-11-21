@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file product_form.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 18.11.25, 12:54
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <fieldset name="custom-options">
+        <settings>
+            <label/>
+        </settings>
+    </fieldset>
+</form>
