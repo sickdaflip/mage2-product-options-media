@@ -218,36 +218,38 @@ if ($option):
             wrapper.setAttribute('data-alpine-initialized', 'true');
             console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
-            // CRITICAL: Mark pre-rendered elements NOW (they exist at init time, not at DOMContentLoaded)
-            const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
-            if (ul) {
-                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marking pre-rendered. Total children:', ul.children.length);
-                let marked = 0;
-                Array.from(ul.children).forEach(child => {
-                    if (child.tagName === 'LI' && !child.hasAttribute('x-show') && !child.hasAttribute('data-pre-rendered')) {
-                        child.setAttribute('data-pre-rendered', 'true');
-                        marked++;
-                        console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marked:', child.textContent.trim().substring(0, 30));
-                    }
-                });
-                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marked', marked, 'elements');
-            }
-
             // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
                 this.selected.push(input.value);
             });
 
-            // Remove pre-rendered elements AFTER Alpine has finished rendering
+            // Remove duplicate elements AFTER Alpine has finished rendering
+            // Duplicates exist because browser pre-renders x-for elements during Alpine's init
             this.$nextTick(() => {
                 const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
                 if (ul) {
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Before removal:', ul.children.length);
-                    const preRendered = ul.querySelectorAll('li[data-pre-rendered]');
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Removing', preRendered.length, 'pre-rendered elements');
-                    preRendered.forEach(li => li.remove());
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - After removal:', ul.children.length);
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Before deduplication:', ul.children.length);
+
+                    // Find duplicate LI elements (without x-show) by text content
+                    const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
+                    const seen = new Map();
+                    const toRemove = [];
+
+                    liElements.forEach(li => {
+                        const text = li.textContent.trim();
+                        if (seen.has(text)) {
+                            // Duplicate found - mark for removal
+                            toRemove.push(li);
+                            console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Duplicate found:', text.substring(0, 30));
+                        } else {
+                            seen.set(text, li);
+                        }
+                    });
+
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Removing', toRemove.length, 'duplicates');
+                    toRemove.forEach(li => li.remove());
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - After deduplication:', ul.children.length);
                 }
             });
         },
