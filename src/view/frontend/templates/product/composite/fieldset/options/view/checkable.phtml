@@ -178,13 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
         init() {
             console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
-            // CRITICAL FIX: Clear any pre-rendered elements before Alpine renders
+            // CRITICAL FIX: Clear pre-rendered x-for elements, but keep static elements with x-show
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
             if (ul) {
                 console.log('[Alpine Init] Clearing pre-rendered elements. Before:', ul.children.length);
-                // Remove all children except template elements
+                // Remove LI elements that were pre-rendered from x-for (they don't have x-show)
+                // Keep TEMPLATE elements and static LI elements with x-show (Show More, Show Less, No Results)
                 Array.from(ul.children).forEach(child => {
-                    if (child.tagName !== 'TEMPLATE') {
+                    if (child.tagName === 'LI' && !child.hasAttribute('x-show')) {
+                        console.log('[Alpine Init] Removing pre-rendered LI:', child.textContent.trim().substring(0, 30));
                         child.remove();
                     }
                 });
