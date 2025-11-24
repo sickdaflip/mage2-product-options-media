@@ -40,11 +40,33 @@ use Magento\Framework\Escaper;
         });
     }
 
+    // Deduplicate checkable option containers on DOM load
+    function deduplicateCheckableOptions() {
+        const seen = new Set();
+        document.querySelectorAll('.checkable-option-container').forEach(container => {
+            const inputContainer = container.querySelector('[id^="checkable-inputs-"]');
+            if (inputContainer) {
+                const optionId = inputContainer.id.replace('checkable-inputs-', '');
+                if (seen.has(optionId)) {
+                    // Duplicate found - remove it
+                    console.warn('Removing duplicate checkable option for:', optionId);
+                    container.remove();
+                } else {
+                    seen.add(optionId);
+                }
+            }
+        });
+    }
+
     // Run deduplication on DOM ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', deduplicateEnhancedSelects);
+        document.addEventListener('DOMContentLoaded', () => {
+            deduplicateEnhancedSelects();
+            deduplicateCheckableOptions();
+        });
     } else {
         deduplicateEnhancedSelects();
+        deduplicateCheckableOptions();
     }
 
     // Reset flag on page show event (handles bfcache)
@@ -56,6 +78,7 @@ use Magento\Framework\Escaper;
             });
             // Also run deduplication
             deduplicateEnhancedSelects();
+            deduplicateCheckableOptions();
         }
     });
 

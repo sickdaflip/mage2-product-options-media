@@ -33,13 +33,25 @@ $mediaHelper = $viewModels->require(MediaHelper::class);
 $option = $block->getOption();
 
 if ($option):
+    $optionId = $option->getId();
+
+    // Prevent duplicate rendering - use static variable to track rendered options
+    static $renderedCheckableOptions = [];
+    $renderKey = $optionId . '_' . spl_object_hash($option);
+
+    if (isset($renderedCheckableOptions[$renderKey])) {
+        // Already rendered, skip
+        echo '<!-- Checkable Option ' . $optionId . ' already rendered -->';
+        return;
+    }
+    $renderedCheckableOptions[$renderKey] = true;
+
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
     $arraySign = $optionType === Option::OPTION_TYPE_CHECKBOX ? '[]' : '';
     $isRadio = $optionType === Option::OPTION_TYPE_RADIO;
     $isCheckbox = $optionType === Option::OPTION_TYPE_CHECKBOX;
     $isRequired = $option->getIsRequire();
-    $optionId = $option->getId();
 
     // Build options array for Alpine
     $optionsData = [];
@@ -67,7 +79,13 @@ if ($option):
             'description' => $value->getData('description') ? strip_tags($value->getData('description')) : null,
         ];
     }
+
+    // Generate unique wrapper ID to help detect duplicates
+    $wrapperId = 'checkable-wrapper-' . $optionId . '-' . uniqid();
 ?>
+
+<!-- Checkable Option Container (ID: <?= $escaper->escapeHtmlAttr($wrapperId) ?>) -->
+<div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
 
 <!-- Hidden inputs for form submission -->
 <div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
@@ -324,5 +342,7 @@ if ($option):
         </ul>
     </div>
 </div>
+
+</div><!-- End Checkable Option Container -->
 
 <?php endif; ?>
