@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file catalog_product_view.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 20.11.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noType="Magento\Framework\View\Layout\etc\page_configuration.xsd">
+    <head>
+        <!-- Load custom CSS for product options -->
+        <css src="Sickdaflip_ProductOptionsMedia::css/product-options-media.css" />
+    </head>
+    <body>
+        <!-- Load enhanced select JavaScript via template -->
+        <referenceContainer name="before.body.end">
+            <block name="sickdaflip.product.options.enhanced.select.js"
+                   template="Sickdaflip_ProductOptionsMedia::page/js/plugins/enhanced-select.phtml" />
+        </referenceContainer>
+
+
+        <referenceBlock name="product.info.options.wrapper">
+            <!-- Override the main options block template -->
+            <referenceBlock name="product.info.options">
+                <action method="setTemplate">
+                    <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml</argument>
+                </action>
+
+                <!-- Override child block templates -->
+                <!-- Template overrides handled by plugins in di.xml -->
+                <!--
+                <referenceBlock name="select">
+                    <action method="setTemplate">
+                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml</argument>
+                    </action>
+                </referenceBlock>
+
+                <referenceBlock name="checkable">
+                    <action method="setTemplate">
+                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml</argument>
+                    </action>
+                </referenceBlock>
+                -->
+            </referenceBlock>
+        </referenceBlock>
+    </body>
+</page>

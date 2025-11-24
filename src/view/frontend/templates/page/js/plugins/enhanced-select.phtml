@@ -1,0 +1,223 @@
+<?php
+/*
+ * Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+ * @project Mage2 GD
+ * @file enhanced-select.phtml
+ * @author Philipp Breitsprecher
+ * @date 21.11.25
+ * @email philippbreitsprecher@gmail.com
+ *
+ * Pure Alpine.js + Tailwind CSS v4.1 Enhanced Select
+ */
+
+use Magento\Framework\Escaper;
+
+/** @var Escaper $escaper */
+?>
+<script>
+// Use IIFE and flag to prevent duplicate registration on page reload/bfcache
+(function() {
+    if (window.__enhancedSelectRegistered) {
+        return;
+    }
+    window.__enhancedSelectRegistered = true;
+
+    // Deduplicate enhanced select containers on DOM load
+    function deduplicateEnhancedSelects() {
+        const seen = new Set();
+        document.querySelectorAll('.enhanced-select-container').forEach(container => {
+            const select = container.querySelector('select[id^="select_"]');
+            if (select) {
+                const selectId = select.id;
+                if (seen.has(selectId)) {
+                    // Duplicate found - remove it
+                    console.warn('Removing duplicate enhanced select for:', selectId);
+                    container.remove();
+                } else {
+                    seen.add(selectId);
+                }
+            }
+        });
+    }
+
+    // Deduplicate checkable option containers on DOM load
+    function deduplicateCheckableOptions() {
+        const seen = new Set();
+        document.querySelectorAll('.checkable-option-container').forEach(container => {
+            const inputContainer = container.querySelector('[id^="checkable-inputs-"]');
+            if (inputContainer) {
+                const optionId = inputContainer.id.replace('checkable-inputs-', '');
+                if (seen.has(optionId)) {
+                    // Duplicate found - remove it
+                    console.warn('Removing duplicate checkable option for:', optionId);
+                    container.remove();
+                } else {
+                    seen.add(optionId);
+                }
+            }
+        });
+    }
+
+    // Run deduplication on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            deduplicateEnhancedSelects();
+            deduplicateCheckableOptions();
+        });
+    } else {
+        deduplicateEnhancedSelects();
+        deduplicateCheckableOptions();
+    }
+
+    // Reset flag on page show event (handles bfcache)
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            // Page was loaded from bfcache, reset all init flags
+            document.querySelectorAll('select[data-enhanced-select-init]').forEach(el => {
+                delete el.dataset.enhancedSelectInit;
+            });
+            // Also run deduplication
+            deduplicateEnhancedSelects();
+            deduplicateCheckableOptions();
+        }
+    });
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('enhancedSelect', (config = {}) => ({
+        isOpen: false,
+        search: '',
+        selectedValue: config.selected || '',
+        selectedValues: config.selectedMultiple || [],
+        options: config.options || [],
+        isMultiple: config.multiple || false,
+        isRequired: config.required || false,
+        placeholder: config.placeholder || '<?= $escaper->escapeJs(__('Select option...')) ?>',
+        originalSelect: null,
+        maxVisible: 4,
+        showAll: false,
+
+        init() {
+            this.originalSelect = document.getElementById(config.selectId);
+            if (this.originalSelect) {
+                // Prevent duplicate initialization by marking the element
+                if (this.originalSelect.dataset.enhancedSelectInit) {
+                    console.warn('Enhanced select already initialized for', config.selectId);
+                    return;
+                }
+                this.originalSelect.dataset.enhancedSelectInit = 'true';
+
+                // Only sync from original if no preconfigured values were passed
+                const hasPreconfig = this.isMultiple
+                    ? (this.selectedValues && this.selectedValues.length > 0)
+                    : (this.selectedValue && this.selectedValue !== '');
+
+                if (hasPreconfig) {
+                    // Sync preconfigured values TO the original select
+                    this.syncToOriginal();
+                } else {
+                    // Read from original select (fallback)
+                    this.syncFromOriginal();
+                }
+            }
+        },
+
+        syncFromOriginal() {
+            if (!this.originalSelect) return;
+            if (this.isMultiple) {
+                this.selectedValues = Array.from(this.originalSelect.selectedOptions).map(o => o.value).filter(v => v);
+            } else {
+                this.selectedValue = this.originalSelect.value || '';
+            }
+        },
+
+        syncToOriginal() {
+            if (!this.originalSelect) return;
+            if (this.isMultiple) {
+                Array.from(this.originalSelect.options).forEach(opt => {
+                    opt.selected = this.selectedValues.includes(opt.value);
+                });
+            } else {
+                this.originalSelect.value = this.selectedValue;
+            }
+            this.originalSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+
+        get filteredOptions() {
+            if (!this.search.trim()) return this.options;
+            const q = this.search.toLowerCase();
+            return this.options.filter(o =>
+                o.title.toLowerCase().includes(q) ||
+                (o.description && o.description.toLowerCase().includes(q))
+            );
+        },
+
+        get visibleOptions() {
+            if (this.showAll || this.search.trim()) return this.filteredOptions;
+            return this.filteredOptions.slice(0, this.maxVisible);
+        },
+
+        get hasMore() {
+            return !this.search.trim() && this.filteredOptions.length > this.maxVisible;
+        },
+
+        get moreCount() {
+            return this.filteredOptions.length - this.maxVisible;
+        },
+
+        get selectedOption() {
+            return this.options.find(o => o.value == this.selectedValue) || null;
+        },
+
+        get selectedList() {
+            return this.options.filter(o => this.selectedValues.includes(o.value));
+        },
+
+        select(value) {
+            if (this.isMultiple) {
+                const idx = this.selectedValues.indexOf(value);
+                if (idx > -1) {
+                    this.selectedValues.splice(idx, 1);
+                } else {
+                    this.selectedValues.push(value);
+                }
+            } else {
+                this.selectedValue = value;
+                this.isOpen = false;
+                this.search = '';
+            }
+            this.syncToOriginal();
+        },
+
+        removeTag(value) {
+            this.selectedValues = this.selectedValues.filter(v => v !== value);
+            this.syncToOriginal();
+        },
+
+        isSelected(value) {
+            return this.isMultiple
+                ? this.selectedValues.includes(value)
+                : this.selectedValue == value;
+        },
+
+        formatPrice(opt) {
+            if (!opt || !opt.price) return '';
+            const sign = opt.price > 0 ? '+' : '';
+            if (opt.priceType === 'percent') return sign + opt.price + '%';
+            return sign + (typeof hyva !== 'undefined' ? hyva.formatPrice(Math.abs(opt.price)) : '$' + Math.abs(opt.price).toFixed(2));
+        },
+
+        open() {
+            this.isOpen = true;
+            this.showAll = false;
+            this.search = '';
+            this.$nextTick(() => this.$refs.searchInput?.focus());
+        },
+
+        close() {
+            this.isOpen = false;
+            this.search = '';
+        }
+    }));
+    });
+})();
+</script>

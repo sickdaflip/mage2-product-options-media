@@ -1,0 +1,41 @@
+/**
+ * Product Options Media Styles
+ * For Hyvä Theme with Tailwind CSS
+ */
+
+.product-options-wrapper input[type='radio'],
+.product-options-wrapper input[type='checkbox'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.product-options-wrapper input[type='radio'] + label,
+.product-options-wrapper input[type='checkbox'] + label {
+    width: 100%;
+    border-width: 1px;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.product-options-wrapper input[type='radio']:checked + label,
+.product-options-wrapper input[type='checkbox']:checked + label {
+    color: rgb(34 197 94);
+    border-color: rgb(34 197 94);
+}
+
+.product-options-wrapper input[type='radio']:checked + label span.text:after,
+.product-options-wrapper input[type='checkbox']:checked + label span.text:after {
+    content: "\2713 ";
+    color: rgb(34 197 94);
+}
