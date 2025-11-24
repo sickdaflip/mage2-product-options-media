@@ -167,8 +167,6 @@ if ($option):
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
             if (!ul) return;
 
-            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Before:', ul.children.length);
-
             // Find duplicate LI elements (without x-show) by text content
             const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
             const seen = new Map();
@@ -178,26 +176,21 @@ if ($option):
                 const text = li.textContent.trim();
                 if (seen.has(text)) {
                     toRemove.push(li);
-                    console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Duplicate:', text.substring(0, 30));
                 } else {
                     seen.set(text, li);
                 }
             });
 
-            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Removing', toRemove.length, 'duplicates');
             toRemove.forEach(li => li.remove());
-            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - After:', ul.children.length);
         },
 
         init() {
             // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
             if (wrapper.hasAttribute('data-alpine-initialized')) {
-                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Already initialized, skipping');
                 return;
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
-            console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
             // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
