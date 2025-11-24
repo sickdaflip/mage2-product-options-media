@@ -22,6 +22,31 @@ use Magento\Framework\Escaper;
     }
     window.__enhancedSelectRegistered = true;
 
+    // Deduplicate enhanced select containers on DOM load
+    function deduplicateEnhancedSelects() {
+        const seen = new Set();
+        document.querySelectorAll('.enhanced-select-container').forEach(container => {
+            const select = container.querySelector('select[id^="select_"]');
+            if (select) {
+                const selectId = select.id;
+                if (seen.has(selectId)) {
+                    // Duplicate found - remove it
+                    console.warn('Removing duplicate enhanced select for:', selectId);
+                    container.remove();
+                } else {
+                    seen.add(selectId);
+                }
+            }
+        });
+    }
+
+    // Run deduplication on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', deduplicateEnhancedSelects);
+    } else {
+        deduplicateEnhancedSelects();
+    }
+
     // Reset flag on page show event (handles bfcache)
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {
@@ -29,6 +54,8 @@ use Magento\Framework\Escaper;
             document.querySelectorAll('select[data-enhanced-select-init]').forEach(el => {
                 delete el.dataset.enhancedSelectInit;
             });
+            // Also run deduplication
+            deduplicateEnhancedSelects();
         }
     });
 

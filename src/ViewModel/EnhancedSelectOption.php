@@ -72,6 +72,9 @@ class EnhancedSelectOption implements ArgumentInterface
         $optionsJson = $this->escaper->escapeHtmlAttr(json_encode($options));
         $arraySign = $isMultiple ? '[]' : '';
 
+        // Generate unique wrapper ID to prevent duplicates
+        $wrapperId = 'enhanced-select-wrapper-' . $optionId . '-' . uniqid();
+
         // Normalize preconfigured values to array of strings
         $selectedValues = [];
         if ($preconfiguredValue !== null) {
@@ -88,6 +91,8 @@ class EnhancedSelectOption implements ArgumentInterface
             : 'selected: ' . json_encode($selectedValues[0] ?? '');
 
         $html = <<<HTML
+<!-- Enhanced Select Container (ID: {$wrapperId}) -->
+<div id="{$wrapperId}" class="enhanced-select-container">
 <!-- Hidden original select for form submission -->
 <select name="options[{$optionId}]{$arraySign}"
         id="{$selectId}"
@@ -244,6 +249,7 @@ class EnhancedSelectOption implements ArgumentInterface
         </ul>
     </div>
 </div>
+</div><!-- End Enhanced Select Container -->
 HTML;
 
         return $html;
