@@ -33,6 +33,10 @@ class CollectionPlugin
             // Get the select object and add our custom columns
             $select = $subject->getSelect();
             $select->columns(['image', 'description']);
+
+            // Add GROUP BY to prevent duplicate values when custom columns are added
+            // This ensures each option_type_id appears only once
+            $select->group('main_table.option_type_id');
         }
         return [$printQuery, $logQuery];
     }
