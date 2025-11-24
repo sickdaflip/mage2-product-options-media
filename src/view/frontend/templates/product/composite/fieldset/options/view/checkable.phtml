@@ -37,14 +37,24 @@ if ($option):
 
     // Prevent duplicate rendering - use static variable to track rendered options
     static $renderedCheckableOptions = [];
+    static $renderCount = [];
     $renderKey = $optionId . '_' . spl_object_hash($option);
+
+    // Track render attempts
+    if (!isset($renderCount[$optionId])) {
+        $renderCount[$optionId] = 0;
+    }
+    $renderCount[$optionId]++;
+
+    echo '<!-- DEBUG: Checkable template called for option ' . $optionId . ' (attempt #' . $renderCount[$optionId] . ') -->';
 
     if (isset($renderedCheckableOptions[$renderKey])) {
         // Already rendered, skip
-        echo '<!-- Checkable Option ' . $optionId . ' already rendered -->';
+        echo '<!-- Checkable Option ' . $optionId . ' already rendered, skipping -->';
         return;
     }
     $renderedCheckableOptions[$renderKey] = true;
+    echo '<!-- Checkable Option ' . $optionId . ' rendering now -->';
 
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
@@ -92,6 +102,9 @@ if ($option):
     // Generate unique wrapper ID to help detect duplicates
     $wrapperId = 'checkable-wrapper-' . $optionId . '-' . uniqid();
 ?>
+
+<!-- DEBUG: Option <?= $optionId ?> has <?= count($optionsData) ?> unique values -->
+<!-- DEBUG: Value IDs: <?= implode(', ', array_column($optionsData, 'value')) ?> -->
 
 <!-- Checkable Option Container (ID: <?= $escaper->escapeHtmlAttr($wrapperId) ?>) -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
