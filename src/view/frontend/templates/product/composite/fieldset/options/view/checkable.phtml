@@ -102,6 +102,10 @@ if ($option):
 <!-- Checkable Option Container -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
 
+<style>
+[x-cloak] { display: none !important; }
+</style>
+
 <!-- Hidden inputs for form submission -->
 <div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
     <?php if ($isRadio && !$isRequired): ?>
@@ -254,7 +258,7 @@ if ($option):
 
         <!-- Tags (Multi) -->
         <template x-if="isMultiple">
-            <div class="flex flex-wrap items-center gap-1 p-1 flex-1">
+            <div class="flex flex-wrap items-center gap-1 p-1 flex-1" x-cloak>
                 <template x-for="opt in selectedOptions" :key="opt.value">
                     <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700">
                         <template x-if="opt.image">
@@ -278,7 +282,7 @@ if ($option):
 
         <!-- Single Select Display -->
         <template x-if="!isMultiple">
-            <div class="flex items-center gap-2 py-2.5 px-3 flex-1">
+            <div class="flex items-center gap-2 py-2.5 px-3 flex-1" x-cloak>
                 <template x-if="hasSelection && selectedOption?.image">
                     <img :src="selectedOption.image" :alt="selectedOption.title" class="size-6 rounded-full object-cover">
                 </template>
@@ -301,6 +305,7 @@ if ($option):
     <!-- Dropdown -->
     <div x-show="isOpen"
          x-transition
+         x-cloak
          class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
          style="display: none;">
 
@@ -315,7 +320,7 @@ if ($option):
         </div>
 
         <!-- Options -->
-        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500" x-cloak>
             <template x-for="opt in visible" :key="opt.value">
                 <li @click="toggle(opt.value)"
                     :class="{ 'bg-blue-50 dark:bg-blue-900/20': isSelected(opt.value) }"
