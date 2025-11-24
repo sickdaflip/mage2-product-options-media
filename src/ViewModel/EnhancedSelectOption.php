@@ -267,9 +267,19 @@ HTML;
     private function buildOptionsArray(Option $option): array
     {
         $options = [];
+        $seenValues = []; // Track to prevent duplicates
+
         foreach ($option->getValues() as $value) {
+            $valueId = (string)$value->getOptionTypeId();
+
+            // Skip if we've already added this value
+            if (in_array($valueId, $seenValues, true)) {
+                continue;
+            }
+            $seenValues[] = $valueId;
+
             $opt = [
-                'value' => (string)$value->getOptionTypeId(),
+                'value' => $valueId,
                 'title' => $value->getTitle(),
                 'price' => (float)$value->getPrice(),
                 'priceType' => $value->getPriceType() ?: 'fixed',
