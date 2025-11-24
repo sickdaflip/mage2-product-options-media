@@ -46,15 +46,11 @@ if ($option):
     }
     $renderCount[$optionId]++;
 
-    echo '<!-- DEBUG: Checkable template called for option ' . $optionId . ' (attempt #' . $renderCount[$optionId] . ') -->';
-
     if (isset($renderedCheckableOptions[$renderKey])) {
         // Already rendered, skip
-        echo '<!-- Checkable Option ' . $optionId . ' already rendered, skipping -->';
         return;
     }
     $renderedCheckableOptions[$renderKey] = true;
-    echo '<!-- Checkable Option ' . $optionId . ' rendering now -->';
 
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
@@ -103,10 +99,7 @@ if ($option):
     $wrapperId = 'checkable-wrapper-' . $optionId . '-' . uniqid();
 ?>
 
-<!-- DEBUG: Option <?= $optionId ?> has <?= count($optionsData) ?> unique values -->
-<!-- DEBUG: Value IDs: <?= implode(', ', array_column($optionsData, 'value')) ?> -->
-
-<!-- Checkable Option Container (ID: <?= $escaper->escapeHtmlAttr($wrapperId) ?>) -->
+<!-- Checkable Option Container -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
 
 <!-- Hidden inputs for form submission -->
