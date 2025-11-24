@@ -53,13 +53,12 @@ if ($option):
     $isCheckbox = $optionType === Option::OPTION_TYPE_CHECKBOX;
     $isRequired = $option->getIsRequire();
 
-    // Build options array for Alpine
-    $optionsData = [];
-    $seenValues = []; // Track to prevent duplicates
+    // Build options array for Alpine - use associative array with value ID as key to prevent duplicates
+    $optionsDataKeyed = [];
 
     // Add "None" option for non-required radio
     if ($isRadio && !$isRequired) {
-        $optionsData[] = [
+        $optionsDataKeyed['none'] = [
             'value' => '',
             'title' => __('None'),
             'price' => 0,
@@ -72,22 +71,23 @@ if ($option):
     foreach ($option->getValues() as $value) {
         $valueId = (string)$value->getOptionTypeId();
 
-        // Skip if we've already added this value
-        if (in_array($valueId, $seenValues, true)) {
-            continue;
+        // Use value ID as array key - this automatically prevents duplicates
+        // If a duplicate exists, it will simply overwrite with same data
+        if (!isset($optionsDataKeyed[$valueId])) {
+            $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
+            $optionsDataKeyed[$valueId] = [
+                'value' => $valueId,
+                'title' => $value->getTitle(),
+                'price' => (float)$valuePrice,
+                'priceFormatted' => $block->formatPrice($value),
+                'image' => $value->getData('image') ? $mediaHelper->getImageUrl($value->getData('image')) : null,
+                'description' => $value->getData('description') ? strip_tags($value->getData('description')) : null,
+            ];
         }
-        $seenValues[] = $valueId;
-
-        $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
-        $optionsData[] = [
-            'value' => $valueId,
-            'title' => $value->getTitle(),
-            'price' => (float)$valuePrice,
-            'priceFormatted' => $block->formatPrice($value),
-            'image' => $value->getData('image') ? $mediaHelper->getImageUrl($value->getData('image')) : null,
-            'description' => $value->getData('description') ? strip_tags($value->getData('description')) : null,
-        ];
     }
+
+    // Convert to indexed array for JSON encoding - guaranteed no duplicates
+    $optionsData = array_values($optionsDataKeyed);
 
     // Generate unique wrapper ID to help detect duplicates
     $wrapperId = 'checkable-wrapper-' . $optionId . '-' . uniqid();
@@ -107,33 +107,36 @@ if ($option):
            data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>_none" />
     <?php endif; ?>
     <?php
-    // Reuse same deduplicated values
-    $seenInputValues = [];
-    foreach ($option->getValues() as $value):
+    // Build array of unique values using same keyed approach
+    $inputValuesKeyed = [];
+    foreach ($option->getValues() as $value) {
         $vid = (string)$value->getOptionTypeId();
 
-        // Skip if we've already added this value
-        if (in_array($vid, $seenInputValues, true)) {
-            continue;
+        // Use value ID as key to prevent duplicates
+        if (!isset($inputValuesKeyed[$vid])) {
+            $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
+            $inputValuesKeyed[$vid] = [
+                'id' => $vid,
+                'price' => $valuePrice,
+                'priceType' => $value->getPriceType(),
+                'checked' => $isCheckbox
+                    ? (is_array($configValue) && in_array($vid, $configValue))
+                    : ($configValue == $vid)
+            ];
         }
-        $seenInputValues[] = $vid;
+    }
 
-        $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
-        $checked = '';
-        if ($isCheckbox) {
-            $checked = is_array($configValue) && in_array($vid, $configValue) ? 'checked' : '';
-        } else {
-            $checked = $configValue == $vid ? 'checked' : '';
-        }
+    // Render deduplicated inputs
+    foreach ($inputValuesKeyed as $vid => $inputData):
     ?>
     <input type="<?= $escaper->escapeHtmlAttr($optionType) ?>"
            name="options[<?= $escaper->escapeHtmlAttr($optionId) ?>]<?= /* @noEscape */ $arraySign ?>"
            id="options_<?= $escaper->escapeHtmlAttr($optionId . '_' . $vid) ?>"
            value="<?= $escaper->escapeHtmlAttr($vid) ?>"
-           <?= $checked ?>
+           <?= $inputData['checked'] ? 'checked' : '' ?>
            class="product-custom-option"
-           data-price-amount="<?= $escaper->escapeHtmlAttr($valuePrice) ?>"
-           data-price-type="<?= $escaper->escapeHtmlAttr($value->getPriceType()) ?>"
+           data-price-amount="<?= $escaper->escapeHtmlAttr($inputData['price']) ?>"
+           data-price-type="<?= $escaper->escapeHtmlAttr($inputData['priceType']) ?>"
            data-option-id="<?= $escaper->escapeHtmlAttr($optionId . '_' . $vid) ?>" />
     <?php endforeach; ?>
 </div>

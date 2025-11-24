@@ -266,36 +266,33 @@ HTML;
 
     private function buildOptionsArray(Option $option): array
     {
-        $options = [];
-        $seenValues = []; // Track to prevent duplicates
+        // Use associative array with value ID as key to automatically prevent duplicates
+        $optionsKeyed = [];
 
         foreach ($option->getValues() as $value) {
             $valueId = (string)$value->getOptionTypeId();
 
-            // Skip if we've already added this value
-            if (in_array($valueId, $seenValues, true)) {
-                continue;
+            // Use value ID as array key - automatically prevents duplicates
+            if (!isset($optionsKeyed[$valueId])) {
+                $optionsKeyed[$valueId] = [
+                    'value' => $valueId,
+                    'title' => $value->getTitle(),
+                    'price' => (float)$value->getPrice(),
+                    'priceType' => $value->getPriceType() ?: 'fixed',
+                ];
+
+                if ($value->getData('image')) {
+                    $optionsKeyed[$valueId]['image'] = $this->mediaHelper->getImageUrl($value->getData('image'));
+                }
+
+                if ($value->getData('description')) {
+                    $optionsKeyed[$valueId]['description'] = strip_tags($value->getData('description'));
+                }
             }
-            $seenValues[] = $valueId;
-
-            $opt = [
-                'value' => $valueId,
-                'title' => $value->getTitle(),
-                'price' => (float)$value->getPrice(),
-                'priceType' => $value->getPriceType() ?: 'fixed',
-            ];
-
-            if ($value->getData('image')) {
-                $opt['image'] = $this->mediaHelper->getImageUrl($value->getData('image'));
-            }
-
-            if ($value->getData('description')) {
-                $opt['description'] = strip_tags($value->getData('description'));
-            }
-
-            $options[] = $opt;
         }
-        return $options;
+
+        // Convert to indexed array for JSON encoding - guaranteed no duplicates
+        return array_values($optionsKeyed);
     }
 
     private function renderNativeOptions(Option $option, bool $required, array $selectedValues = []): string
@@ -304,8 +301,18 @@ HTML;
         if (!$required) {
             $html .= '<option value="">' . $this->escaper->escapeHtml(__('-- Please Select --')) . '</option>';
         }
+
+        // Build unique options using associative array
+        $uniqueOptions = [];
         foreach ($option->getValues() as $value) {
             $valueId = (string)$value->getOptionTypeId();
+            if (!isset($uniqueOptions[$valueId])) {
+                $uniqueOptions[$valueId] = $value;
+            }
+        }
+
+        // Render deduplicated options
+        foreach ($uniqueOptions as $valueId => $value) {
             $isSelected = in_array($valueId, $selectedValues, true);
             $html .= sprintf(
                 '<option value="%s"%s>%s</option>',
@@ -314,6 +321,7 @@ HTML;
                 $this->escaper->escapeHtml($value->getTitle())
             );
         }
+
         return $html;
     }
 
