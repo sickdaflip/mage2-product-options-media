@@ -27,6 +27,7 @@ class EnhancedSelectOption implements ArgumentInterface
     private MediaHelper $mediaHelper;
     private PricingHelper $pricingHelper;
     private array $preconfiguredValues = [];
+    private static array $renderedOptions = [];
 
     public function __construct(
         Escaper $escaper,
@@ -47,9 +48,17 @@ class EnhancedSelectOption implements ArgumentInterface
     public function getOptionHtml($option, Product $product, $preconfiguredValue = null): string
     {
         $optionType = $option->getType();
+        $optionId = $option->getId();
+
+        // Prevent duplicate rendering - track by option ID
+        $renderKey = $optionId . '_' . spl_object_hash($option);
+        if (isset(self::$renderedOptions[$renderKey])) {
+            // Option already rendered, return empty to prevent duplicate
+            return '<!-- Enhanced Select Option ' . $optionId . ' already rendered -->';
+        }
+        self::$renderedOptions[$renderKey] = true;
 
         // Get preconfigured value for this option
-        $optionId = $option->getId();
         $preconfig = $preconfiguredValue ?? ($this->preconfiguredValues[$optionId] ?? null);
 
         if ($optionType === Option::OPTION_TYPE_DROP_DOWN) {
