@@ -218,6 +218,21 @@ if ($option):
             wrapper.setAttribute('data-alpine-initialized', 'true');
             console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
+            // CRITICAL: Mark pre-rendered elements NOW (they exist at init time, not at DOMContentLoaded)
+            const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
+            if (ul) {
+                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marking pre-rendered. Total children:', ul.children.length);
+                let marked = 0;
+                Array.from(ul.children).forEach(child => {
+                    if (child.tagName === 'LI' && !child.hasAttribute('x-show') && !child.hasAttribute('data-pre-rendered')) {
+                        child.setAttribute('data-pre-rendered', 'true');
+                        marked++;
+                        console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marked:', child.textContent.trim().substring(0, 30));
+                    }
+                });
+                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Marked', marked, 'elements');
+            }
+
             // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
@@ -225,7 +240,6 @@ if ($option):
             });
 
             // Remove pre-rendered elements AFTER Alpine has finished rendering
-            // Elements were already marked by the synchronous script before Alpine init
             this.$nextTick(() => {
                 const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
                 if (ul) {
