@@ -106,6 +106,19 @@ if ($option):
 [x-cloak] { display: none !important; }
 </style>
 
+<script>
+// Debug: Count children BEFORE Alpine.js initializes
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
+        if (ul) {
+            console.log('[DOM Ready] UL children count for option <?= $escaper->escapeJs($optionId) ?>:', ul.children.length);
+            console.log('[DOM Ready] LI elements:', Array.from(ul.querySelectorAll('li')).map(li => li.textContent.trim().substring(0, 30)));
+        }
+    }, 100);
+});
+</script>
+
 <!-- Hidden inputs for form submission -->
 <div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
     <?php if ($isRadio && !$isRequired): ?>
@@ -163,9 +176,17 @@ if ($option):
         showAll: false,
 
         init() {
+            console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
+            console.log('[Alpine Init] Visible items count:', this.visible.length);
+            console.log('[Alpine Init] UL children before init:', document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul')?.children.length || 0);
+
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
                 this.selected.push(input.value);
+            });
+
+            this.$nextTick(() => {
+                console.log('[Alpine Init] UL children after init:', document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul')?.children.length || 0);
             });
         },
 
