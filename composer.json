@@ -1,7 +1,7 @@
 {
   "name": "sickdaflip/module-product-options-media",
   "description": "Add images and descriptions to custom product options for enhanced product configuration",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "require": {
     "php": "^8.4",
     "ext-json": "*",
