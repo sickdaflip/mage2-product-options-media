@@ -299,79 +299,77 @@ if ($option):
     </div>
 
     <!-- Dropdown -->
-    <template x-if="true">
-        <div x-show="isOpen"
-             x-transition
-             class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
-             style="display: none;">
+    <div x-show="isOpen"
+         x-transition
+         class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
+         style="display: none;">
 
-            <!-- Search -->
-            <div class="p-2 border-b border-gray-100 dark:border-neutral-800">
-                <input type="text"
-                       x-ref="search"
-                       x-model="search"
-                       @click.stop
-                       placeholder="<?= $escaper->escapeHtmlAttr(__('Search')) ?>"
-                       class="py-2.5 px-3 w-full rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
-            </div>
-
-            <!-- Options -->
-            <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-                <template x-for="opt in visible" :key="opt.value">
-                    <li @click="toggle(opt.value)"
-                        :class="{ 'bg-blue-50 dark:bg-blue-900/20': isSelected(opt.value) }"
-                        class="flex items-center py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800 transition-colors">
-
-                        <!-- Image -->
-                        <template x-if="opt.image">
-                            <img :src="opt.image" :alt="opt.title" class="size-8 me-2 rounded-full object-cover">
-                        </template>
-
-                        <!-- Content -->
-                        <div class="flex-1">
-                            <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" x-text="opt.title"></div>
-                            <template x-if="opt.description">
-                                <div class="text-xs text-gray-500 dark:text-neutral-500" x-text="opt.description"></div>
-                            </template>
-                        </div>
-
-                        <!-- Price -->
-                        <template x-if="opt.priceFormatted">
-                            <span class="text-sm text-gray-500 me-2" x-html="opt.priceFormatted"></span>
-                        </template>
-
-                        <!-- Selected Check -->
-                        <div class="ms-auto">
-                            <span x-show="isSelected(opt.value)" class="text-blue-600">
-                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
-                                </svg>
-                            </span>
-                        </div>
-                    </li>
-                </template>
-
-                <!-- Show More -->
-                <li x-show="hasMore && !showAll"
-                    @click.stop="showAll = true"
-                    class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
-                    <?= $escaper->escapeHtml(__('Show')) ?> <span x-text="moreCount"></span> <?= $escaper->escapeHtml(__('more')) ?>...
-                </li>
-
-                <!-- Show Less -->
-                <li x-show="showAll && filtered.length > maxVisible"
-                    @click.stop="showAll = false"
-                    class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
-                    <?= $escaper->escapeHtml(__('Show less')) ?>
-                </li>
-
-                <!-- No Results -->
-                <li x-show="filtered.length === 0" class="py-4 px-4 text-gray-500 dark:text-neutral-400 text-center text-sm">
-                    <?= $escaper->escapeHtml(__('No options found')) ?>
-                </li>
-            </ul>
+        <!-- Search -->
+        <div class="p-2 border-b border-gray-100 dark:border-neutral-800">
+            <input type="text"
+                   x-ref="search"
+                   x-model="search"
+                   @click.stop
+                   placeholder="<?= $escaper->escapeHtmlAttr(__('Search')) ?>"
+                   class="py-2.5 px-3 w-full rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400">
         </div>
-    </template>
+
+        <!-- Options -->
+        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            <template x-for="opt in visible" :key="opt.value">
+                <li @click="toggle(opt.value)"
+                    :class="{ 'bg-blue-50 dark:bg-blue-900/20': isSelected(opt.value) }"
+                    class="flex items-center py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800 transition-colors">
+
+                    <!-- Image -->
+                    <template x-if="opt.image">
+                        <img :src="opt.image" :alt="opt.title" class="size-8 me-2 rounded-full object-cover">
+                    </template>
+
+                    <!-- Content -->
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" x-text="opt.title"></div>
+                        <template x-if="opt.description">
+                            <div class="text-xs text-gray-500 dark:text-neutral-500" x-text="opt.description"></div>
+                        </template>
+                    </div>
+
+                    <!-- Price -->
+                    <template x-if="opt.priceFormatted">
+                        <span class="text-sm text-gray-500 me-2" x-html="opt.priceFormatted"></span>
+                    </template>
+
+                    <!-- Selected Check -->
+                    <div class="ms-auto">
+                        <span x-show="isSelected(opt.value)" class="text-blue-600">
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                            </svg>
+                        </span>
+                    </div>
+                </li>
+            </template>
+
+            <!-- Show More -->
+            <li x-show="hasMore && !showAll"
+                @click.stop="showAll = true"
+                class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
+                <?= $escaper->escapeHtml(__('Show')) ?> <span x-text="moreCount"></span> <?= $escaper->escapeHtml(__('more')) ?>...
+            </li>
+
+            <!-- Show Less -->
+            <li x-show="showAll && filtered.length > maxVisible"
+                @click.stop="showAll = false"
+                class="py-2 px-4 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg text-blue-600 font-medium">
+                <?= $escaper->escapeHtml(__('Show less')) ?>
+            </li>
+
+            <!-- No Results -->
+            <li x-show="filtered.length === 0" class="py-4 px-4 text-gray-500 dark:text-neutral-400 text-center text-sm">
+                <?= $escaper->escapeHtml(__('No options found')) ?>
+            </li>
+        </ul>
+    </div>
 </div>
 
 </div><!-- End Checkable Option Container -->
