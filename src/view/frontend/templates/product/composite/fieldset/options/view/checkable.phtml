@@ -46,15 +46,11 @@ if ($option):
     }
     $renderCount[$optionId]++;
 
-    echo '<!-- DEBUG: Checkable template called for option ' . $optionId . ' (attempt #' . $renderCount[$optionId] . ') -->';
-
     if (isset($renderedCheckableOptions[$renderKey])) {
         // Already rendered, skip
-        echo '<!-- Checkable Option ' . $optionId . ' already rendered, skipping -->';
         return;
     }
     $renderedCheckableOptions[$renderKey] = true;
-    echo '<!-- Checkable Option ' . $optionId . ' rendering now -->';
 
     $configValue = $block->getPreconfiguredValue($option);
     $optionType = $option->getType();
@@ -103,11 +99,12 @@ if ($option):
     $wrapperId = 'checkable-wrapper-' . $optionId . '-' . uniqid();
 ?>
 
-<!-- DEBUG: Option <?= $optionId ?> has <?= count($optionsData) ?> unique values -->
-<!-- DEBUG: Value IDs: <?= implode(', ', array_column($optionsData, 'value')) ?> -->
-
-<!-- Checkable Option Container (ID: <?= $escaper->escapeHtmlAttr($wrapperId) ?>) -->
+<!-- Checkable Option Container -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
 
 <!-- Hidden inputs for form submission -->
 <div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
@@ -165,11 +162,44 @@ if ($option):
         maxVisible: 4,
         showAll: false,
 
+        deduplicate() {
+            // Remove duplicate LI elements by text content
+            const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
+            if (!ul) return;
+
+            // Find duplicate LI elements (without x-show) by text content
+            const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
+            const seen = new Map();
+            const toRemove = [];
+
+            liElements.forEach(li => {
+                const text = li.textContent.trim();
+                if (seen.has(text)) {
+                    toRemove.push(li);
+                } else {
+                    seen.set(text, li);
+                }
+            });
+
+            toRemove.forEach(li => li.remove());
+        },
+
         init() {
+            // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
+            const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
+            if (wrapper.hasAttribute('data-alpine-initialized')) {
+                return;
+            }
+            wrapper.setAttribute('data-alpine-initialized', 'true');
+
+            // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
                 this.selected.push(input.value);
             });
+
+            // Remove duplicates after Alpine renders
+            this.$nextTick(() => this.deduplicate());
         },
 
         get filtered() {
@@ -205,6 +235,12 @@ if ($option):
                     this.selected.push(value);
                 }
             } else {
+                // Radio: If clicking the same option again, just close dropdown
+                // If clicking a different option, select it and close
+                if (this.selected[0] === value) {
+                    this.isOpen = false;
+                    return; // Don't sync, value unchanged
+                }
                 this.selected = [value];
                 this.isOpen = false;
             }
@@ -241,6 +277,10 @@ if ($option):
             });
         },
         open() {
+            // CRITICAL: Deduplicate BEFORE transition starts (before isOpen = true)
+            // Doing it in $nextTick would interrupt the transition
+            this.deduplicate();
+
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
@@ -261,7 +301,7 @@ if ($option):
 
         <!-- Tags (Multi) -->
         <template x-if="isMultiple">
-            <div class="flex flex-wrap items-center gap-1 p-1 flex-1">
+            <div class="flex flex-wrap items-center gap-1 p-1 flex-1" x-cloak>
                 <template x-for="opt in selectedOptions" :key="opt.value">
                     <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700">
                         <template x-if="opt.image">
@@ -285,7 +325,7 @@ if ($option):
 
         <!-- Single Select Display -->
         <template x-if="!isMultiple">
-            <div class="flex items-center gap-2 py-2.5 px-3 flex-1">
+            <div class="flex items-center gap-2 py-2.5 px-3 flex-1" x-cloak>
                 <template x-if="hasSelection && selectedOption?.image">
                     <img :src="selectedOption.image" :alt="selectedOption.title" class="size-6 rounded-full object-cover">
                 </template>
@@ -307,6 +347,8 @@ if ($option):
 
     <!-- Dropdown -->
     <div x-show="isOpen"
+         x-transition
+         x-cloak
          class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
          style="display: none;">
 
@@ -321,7 +363,7 @@ if ($option):
         </div>
 
         <!-- Options -->
-        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+        <ul class="overflow-y-auto max-h-52 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500" x-cloak>
             <template x-for="opt in visible" :key="opt.value">
                 <li @click="toggle(opt.value)"
                     :class="{ 'bg-blue-50 dark:bg-blue-900/20': isSelected(opt.value) }"

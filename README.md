@@ -283,7 +283,19 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - Use `typeof updateCustomOptionValue === 'function' && updateCustomOptionValue(...)` to prevent race conditions
 - This checks if the function exists before calling it
 
+**Duplicate options rendering (SOLVED in v1.1.0):**
+- Fixed: Browser pre-rendering conflict with Alpine.js x-defer attribute caused duplicate inputs/selects
+- Solution: Text-based deduplication runs at init() and before dropdown opens
+- No user action required - automatically fixed in latest version
+
 ## Version History
+
+### 1.1.0
+- Fixed duplicate rendering of checkbox/radio options caused by Alpine.js x-defer timing
+- Removed frontend CSS file (no longer needed)
+- Improved Radio button UX (clicking same option again closes dropdown)
+- Added text-based deduplication for robust duplicate prevention
+- Fixed transition errors when opening/closing dropdowns
 
 ### 1.0.0
 - Initial Magento 2.4.x release
