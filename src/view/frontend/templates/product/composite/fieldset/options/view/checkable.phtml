@@ -111,28 +111,43 @@ if ($option):
 // This script runs synchronously, BEFORE Alpine's defer/intersect
 (function() {
     const wrapperId = '<?= $escaper->escapeJs($wrapperId) ?>';
+    const optionId = '<?= $escaper->escapeJs($optionId) ?>';
 
     // Mark pre-rendered LI elements that don't have x-show (they're from browser pre-rendering x-for)
     function markPreRendered() {
         const ul = document.querySelector('#' + wrapperId + ' ul');
         if (ul) {
+            console.log('[Mark] Option', optionId, '- Total children:', ul.children.length);
+            let marked = 0;
             Array.from(ul.children).forEach(child => {
                 if (child.tagName === 'LI' && !child.hasAttribute('x-show')) {
-                    child.setAttribute('data-pre-rendered', 'true');
+                    if (!child.hasAttribute('data-pre-rendered')) {
+                        child.setAttribute('data-pre-rendered', 'true');
+                        marked++;
+                        console.log('[Mark] Option', optionId, '- Marked:', child.textContent.trim().substring(0, 30));
+                    }
                 }
             });
+            console.log('[Mark] Option', optionId, '- Marked', marked, 'elements');
         }
     }
 
     // Try immediately
+    console.log('[Mark] Option', optionId, '- Running immediately');
     markPreRendered();
 
     // Try again when DOM is ready (in case template hasn't rendered yet)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', markPreRendered);
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[Mark] Option', optionId, '- Running on DOMContentLoaded');
+            markPreRendered();
+        });
     } else {
         // DOM already loaded, try in next tick
-        setTimeout(markPreRendered, 0);
+        setTimeout(() => {
+            console.log('[Mark] Option', optionId, '- Running on setTimeout');
+            markPreRendered();
+        }, 0);
     }
 })();
 </script>
@@ -197,9 +212,11 @@ if ($option):
             // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
             if (wrapper.hasAttribute('data-alpine-initialized')) {
+                console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Already initialized, skipping');
                 return;
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
+            console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
             // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
@@ -212,8 +229,11 @@ if ($option):
             this.$nextTick(() => {
                 const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
                 if (ul) {
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Before removal:', ul.children.length);
                     const preRendered = ul.querySelectorAll('li[data-pre-rendered]');
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Removing', preRendered.length, 'pre-rendered elements');
                     preRendered.forEach(li => li.remove());
+                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - After removal:', ul.children.length);
                 }
             });
         },
