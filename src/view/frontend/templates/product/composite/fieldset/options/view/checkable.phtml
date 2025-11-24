@@ -111,22 +111,16 @@ if ($option):
 // This script runs synchronously, BEFORE Alpine's defer/intersect
 (function() {
     const wrapperId = '<?= $escaper->escapeJs($wrapperId) ?>';
-    const optionId = '<?= $escaper->escapeJs($optionId) ?>';
 
     // Mark pre-rendered LI elements that don't have x-show (they're from browser pre-rendering x-for)
     function markPreRendered() {
         const ul = document.querySelector('#' + wrapperId + ' ul');
         if (ul) {
-            let marked = 0;
             Array.from(ul.children).forEach(child => {
                 if (child.tagName === 'LI' && !child.hasAttribute('x-show')) {
                     child.setAttribute('data-pre-rendered', 'true');
-                    marked++;
                 }
             });
-            if (marked > 0) {
-                console.log('[Pre-Init] Option', optionId, '- Marked', marked, 'pre-rendered elements');
-            }
         }
     }
 
@@ -141,19 +135,6 @@ if ($option):
         setTimeout(markPreRendered, 0);
     }
 })();
-</script>
-
-<script>
-// Debug: Count children BEFORE Alpine.js initializes
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
-        if (ul) {
-            console.log('[DOM Ready] UL children count for option <?= $escaper->escapeJs($optionId) ?>:', ul.children.length);
-            console.log('[DOM Ready] LI elements:', Array.from(ul.querySelectorAll('li')).map(li => li.textContent.trim().substring(0, 30)));
-        }
-    }, 100);
-});
 </script>
 
 <!-- Hidden inputs for form submission -->
@@ -216,11 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
             if (wrapper.hasAttribute('data-alpine-initialized')) {
-                console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Already initialized, skipping');
                 return;
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
-            console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
             // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
@@ -234,9 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
                 if (ul) {
                     const preRendered = ul.querySelectorAll('li[data-pre-rendered]');
-                    console.log('[Alpine Init] Removing', preRendered.length, 'pre-rendered elements after Alpine render');
                     preRendered.forEach(li => li.remove());
-                    console.log('[Alpine Init] UL children after cleanup:', ul.children.length);
                 }
             });
         },
