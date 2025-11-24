@@ -174,8 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isRequired: <?= $isRequired ? 'true' : 'false' ?>,
         maxVisible: 4,
         showAll: false,
+        initialized: false,
 
         init() {
+            // CRITICAL: Prevent multiple init() calls - only run once
+            if (this.initialized) {
+                console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Already initialized, skipping');
+                return;
+            }
+            this.initialized = true;
             console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
 
             // CRITICAL FIX: Mark pre-rendered elements first, then remove AFTER Alpine renders
