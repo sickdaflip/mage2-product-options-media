@@ -15,13 +15,25 @@ use Magento\Framework\Escaper;
 /** @var Escaper $escaper */
 ?>
 <script>
-document.addEventListener('alpine:init', () => {
-    // Prevent duplicate registration on page reload/bfcache
-    if (Alpine.data && Alpine._data && Alpine._data.enhancedSelect) {
+// Use IIFE and flag to prevent duplicate registration on page reload/bfcache
+(function() {
+    if (window.__enhancedSelectRegistered) {
         return;
     }
+    window.__enhancedSelectRegistered = true;
 
-    Alpine.data('enhancedSelect', (config = {}) => ({
+    // Reset flag on page show event (handles bfcache)
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            // Page was loaded from bfcache, reset all init flags
+            document.querySelectorAll('select[data-enhanced-select-init]').forEach(el => {
+                delete el.dataset.enhancedSelectInit;
+            });
+        }
+    });
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('enhancedSelect', (config = {}) => ({
         isOpen: false,
         search: '',
         selectedValue: config.selected || '',
@@ -37,6 +49,13 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.originalSelect = document.getElementById(config.selectId);
             if (this.originalSelect) {
+                // Prevent duplicate initialization by marking the element
+                if (this.originalSelect.dataset.enhancedSelectInit) {
+                    console.warn('Enhanced select already initialized for', config.selectId);
+                    return;
+                }
+                this.originalSelect.dataset.enhancedSelectInit = 'true';
+
                 // Only sync from original if no preconfigured values were passed
                 const hasPreconfig = this.isMultiple
                     ? (this.selectedValues && this.selectedValues.length > 0)
@@ -149,5 +168,6 @@ document.addEventListener('alpine:init', () => {
             this.search = '';
         }
     }));
-});
+    });
+})();
 </script>
