@@ -106,8 +106,18 @@ if ($option):
            class="product-custom-option"
            data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>_none" />
     <?php endif; ?>
-    <?php foreach ($option->getValues() as $value):
-        $vid = $value->getOptionTypeId();
+    <?php
+    // Reuse same deduplicated values
+    $seenInputValues = [];
+    foreach ($option->getValues() as $value):
+        $vid = (string)$value->getOptionTypeId();
+
+        // Skip if we've already added this value
+        if (in_array($vid, $seenInputValues, true)) {
+            continue;
+        }
+        $seenInputValues[] = $vid;
+
         $valuePrice = $productPriceViewModel->getCustomOptionPrice($value, CustomOptionPrice::PRICE_CODE, $product);
         $checked = '';
         if ($isCheckbox) {
