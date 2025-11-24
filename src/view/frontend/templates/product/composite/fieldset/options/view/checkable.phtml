@@ -284,13 +284,14 @@ if ($option):
             });
         },
         open() {
+            // CRITICAL: Deduplicate BEFORE transition starts (before isOpen = true)
+            // Doing it in $nextTick would interrupt the transition
+            this.deduplicate();
+
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
-            this.$nextTick(() => {
-                this.deduplicate(); // Remove duplicates when dropdown opens
-                this.$refs.search?.focus();
-            });
+            this.$nextTick(() => this.$refs.search?.focus());
         },
         close() {
             this.isOpen = false;
