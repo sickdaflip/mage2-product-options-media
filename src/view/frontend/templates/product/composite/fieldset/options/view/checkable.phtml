@@ -177,8 +177,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         init() {
             console.log('[Alpine Init] Option <?= $escaper->escapeJs($optionId) ?> - Starting initialization');
-            console.log('[Alpine Init] Visible items count:', this.visible.length);
-            console.log('[Alpine Init] UL children before init:', document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul')?.children.length || 0);
+
+            // CRITICAL FIX: Clear any pre-rendered elements before Alpine renders
+            const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
+            if (ul) {
+                console.log('[Alpine Init] Clearing pre-rendered elements. Before:', ul.children.length);
+                // Remove all children except template elements
+                Array.from(ul.children).forEach(child => {
+                    if (child.tagName !== 'TEMPLATE') {
+                        child.remove();
+                    }
+                });
+                console.log('[Alpine Init] After clearing:', ul.children.length);
+            }
 
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
@@ -186,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             this.$nextTick(() => {
-                console.log('[Alpine Init] UL children after init:', document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul')?.children.length || 0);
+                console.log('[Alpine Init] UL children after Alpine render:', document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul')?.children.length || 0);
             });
         },
 
