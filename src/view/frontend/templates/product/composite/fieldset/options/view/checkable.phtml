@@ -162,6 +162,33 @@ if ($option):
         maxVisible: 4,
         showAll: false,
 
+        deduplicate() {
+            // Remove duplicate LI elements by text content
+            const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
+            if (!ul) return;
+
+            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Before:', ul.children.length);
+
+            // Find duplicate LI elements (without x-show) by text content
+            const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
+            const seen = new Map();
+            const toRemove = [];
+
+            liElements.forEach(li => {
+                const text = li.textContent.trim();
+                if (seen.has(text)) {
+                    toRemove.push(li);
+                    console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Duplicate:', text.substring(0, 30));
+                } else {
+                    seen.set(text, li);
+                }
+            });
+
+            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - Removing', toRemove.length, 'duplicates');
+            toRemove.forEach(li => li.remove());
+            console.log('[Dedup] Option <?= $escaper->escapeJs($optionId) ?> - After:', ul.children.length);
+        },
+
         init() {
             // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
@@ -178,34 +205,8 @@ if ($option):
                 this.selected.push(input.value);
             });
 
-            // Remove duplicate elements AFTER Alpine has finished rendering
-            // Duplicates exist because browser pre-renders x-for elements during Alpine's init
-            this.$nextTick(() => {
-                const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
-                if (ul) {
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Before deduplication:', ul.children.length);
-
-                    // Find duplicate LI elements (without x-show) by text content
-                    const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
-                    const seen = new Map();
-                    const toRemove = [];
-
-                    liElements.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (seen.has(text)) {
-                            // Duplicate found - mark for removal
-                            toRemove.push(li);
-                            console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Duplicate found:', text.substring(0, 30));
-                        } else {
-                            seen.set(text, li);
-                        }
-                    });
-
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - Removing', toRemove.length, 'duplicates');
-                    toRemove.forEach(li => li.remove());
-                    console.log('[Init] Option <?= $escaper->escapeJs($optionId) ?> - After deduplication:', ul.children.length);
-                }
-            });
+            // Remove duplicates after Alpine renders
+            this.$nextTick(() => this.deduplicate());
         },
 
         get filtered() {
@@ -286,7 +287,10 @@ if ($option):
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
-            this.$nextTick(() => this.$refs.search?.focus());
+            this.$nextTick(() => {
+                this.deduplicate(); // Remove duplicates when dropdown opens
+                this.$refs.search?.focus();
+            });
         },
         close() {
             this.isOpen = false;
