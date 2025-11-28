@@ -106,6 +106,19 @@ if ($option):
 [x-cloak] { display: none !important; }
 </style>
 
+<script>
+// Global handler for cancelled Alpine.js transitions - prevents console errors
+if (!window.__alpineTransitionHandlerInstalled) {
+    window.__alpineTransitionHandlerInstalled = true;
+    window.addEventListener('unhandledrejection', function(event) {
+        // Suppress errors from cancelled Alpine.js transitions
+        if (event.reason && event.reason.isFromCancelledTransition) {
+            event.preventDefault();
+        }
+    });
+}
+</script>
+
 <!-- Hidden inputs for form submission -->
 <div id="checkable-inputs-<?= $escaper->escapeHtmlAttr($optionId) ?>" class="hidden">
     <?php if ($isRadio && !$isRequired): ?>
@@ -228,11 +241,14 @@ if ($option):
 
         toggle(value) {
             if (this.isMultiple) {
+                // Use filter/concat instead of splice/push for better reactivity
                 const idx = this.selected.indexOf(value);
                 if (idx > -1) {
-                    this.selected.splice(idx, 1);
+                    // Remove: create new array without this value
+                    this.selected = this.selected.filter(v => v !== value);
                 } else {
-                    this.selected.push(value);
+                    // Add: create new array with this value
+                    this.selected = [...this.selected, value];
                 }
             } else {
                 // Radio: If clicking the same option again, just close dropdown
@@ -244,7 +260,11 @@ if ($option):
                 this.selected = [value];
                 this.isOpen = false;
             }
-            this.sync();
+
+            // Force reactivity with $nextTick to ensure UI updates
+            this.$nextTick(() => {
+                this.sync();
+            });
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);
