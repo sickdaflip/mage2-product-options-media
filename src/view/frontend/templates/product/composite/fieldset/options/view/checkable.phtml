@@ -199,26 +199,31 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
 
         init() {
-            // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
-            const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
-            if (wrapper.hasAttribute('data-alpine-initialized')) {
+            console.log('Init called for option <?= $escaper->escapeJs($optionId) ?>');
+
+            // CRITICAL: Prevent multiple init() calls using this.$el (the element with x-data)
+            if (this.$el.hasAttribute('data-alpine-initialized')) {
+                console.log('Already initialized, skipping: <?= $escaper->escapeJs($optionId) ?>');
                 return;
             }
-            wrapper.setAttribute('data-alpine-initialized', 'true');
+            this.$el.setAttribute('data-alpine-initialized', 'true');
 
             // Load options from data-attribute (lazy loading approach)
-            // This ensures Alpine is fully initialized before options are loaded
+            // Use this.$el which refers to the element with x-data
             const optionsData = this.$el.getAttribute('data-options');
+            console.log('Options data found:', optionsData ? 'yes' : 'no');
+
             if (optionsData) {
                 try {
                     const parsedOptions = JSON.parse(optionsData);
+                    console.log('Parsed options:', parsedOptions.length, 'items');
                     // Normalize all values to strings immediately
                     this.options = parsedOptions.map(opt => ({
                         ...opt,
                         value: String(opt.value)
                     }));
                 } catch (e) {
-                    console.error('Failed to parse options data:', e);
+                    console.error('Failed to parse options data for <?= $escaper->escapeJs($optionId) ?>:', e);
                     this.options = [];
                 }
             }
@@ -235,6 +240,7 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 });
                 // Set as new array instead of mutating
                 this.selected = checkedValues;
+                console.log('Initial selected values:', this.selected);
             }
 
             // Remove duplicates after Alpine renders - use multiple ticks to ensure DOM is ready
@@ -245,6 +251,7 @@ if (!window.__alpineTransitionHandlerInstalled) {
                     this.$nextTick(() => {
                         // Trigger reactivity by creating a new array reference
                         this.selected = [...this.selected];
+                        console.log('Init complete for <?= $escaper->escapeJs($optionId) ?>');
                     });
                 }, 100);
             });
