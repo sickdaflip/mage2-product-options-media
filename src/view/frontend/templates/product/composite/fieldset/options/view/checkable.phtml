@@ -367,7 +367,11 @@ if (!window.__alpineTransitionHandlerInstalled) {
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
-            this.$nextTick(() => this.$refs.search?.focus());
+            this.$nextTick(() => {
+                if (this.$refs.search) {
+                    this.$refs.search.focus();
+                }
+            });
         },
         close() {
             this.isOpen = false;
