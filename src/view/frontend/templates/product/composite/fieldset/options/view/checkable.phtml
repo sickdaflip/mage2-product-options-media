@@ -199,24 +199,17 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
 
         init() {
-            console.log('Init called for option <?= $escaper->escapeJs($optionId) ?>');
-
             // CRITICAL: Prevent multiple init() calls using this.$el (the element with x-data)
             if (this.$el.hasAttribute('data-alpine-initialized')) {
-                console.log('Already initialized, skipping: <?= $escaper->escapeJs($optionId) ?>');
                 return;
             }
             this.$el.setAttribute('data-alpine-initialized', 'true');
 
             // Load options from data-attribute (lazy loading approach)
-            // Use this.$el which refers to the element with x-data
             const optionsData = this.$el.getAttribute('data-options');
-            console.log('Options data found:', optionsData ? 'yes' : 'no');
-
             if (optionsData) {
                 try {
                     const parsedOptions = JSON.parse(optionsData);
-                    console.log('Parsed options:', parsedOptions.length, 'items');
                     // Normalize all values to strings immediately
                     this.options = parsedOptions.map(opt => ({
                         ...opt,
@@ -240,19 +233,12 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 });
                 // Set as new array instead of mutating
                 this.selected = checkedValues;
-                console.log('Initial selected values:', this.selected);
             }
 
-            // Remove duplicates after Alpine renders - use multiple ticks to ensure DOM is ready
+            // Remove duplicates after Alpine renders
             this.$nextTick(() => {
                 setTimeout(() => {
                     this.deduplicate();
-                    // Force a re-render to ensure tags appear
-                    this.$nextTick(() => {
-                        // Trigger reactivity by creating a new array reference
-                        this.selected = [...this.selected];
-                        console.log('Init complete for <?= $escaper->escapeJs($optionId) ?>');
-                    });
                 }, 100);
             });
         },
@@ -273,14 +259,10 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
         get selectedOptions() {
             // Ensure type-safe comparison: convert both to strings
-            const result = this.options.filter(o => {
+            return this.options.filter(o => {
                 const match = this.selected.includes(String(o.value)) && o.value !== '';
                 return match;
             });
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] selectedOptions called, returning:', result.length, 'items');
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] selected array:', this.selected);
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] options array length:', this.options.length);
-            return result;
         },
         get selectedOption() {
             // Ensure type-safe comparison: convert both to strings
@@ -291,26 +273,21 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
 
         toggle(value) {
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] toggle() called with value:', value);
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] Before toggle - selected:', this.selected);
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] Before toggle - options.length:', this.options.length);
-
             // Ensure value is always a string for consistent comparison
             const stringValue = String(value);
 
             if (this.isMultiple) {
                 // Use filter/concat instead of splice/push for better reactivity
                 const idx = this.selected.indexOf(stringValue);
-                console.log('[<?= $escaper->escapeJs($optionId) ?>] Index of', stringValue, 'in selected:', idx);
                 if (idx > -1) {
                     // Remove: create new array without this value
                     this.selected = this.selected.filter(v => v !== stringValue);
-                    console.log('[<?= $escaper->escapeJs($optionId) ?>] Removed, new selected:', this.selected);
                 } else {
                     // Add: create new array with this value
                     this.selected = [...this.selected, stringValue];
-                    console.log('[<?= $escaper->escapeJs($optionId) ?>] Added, new selected:', this.selected);
                 }
+                // Sync immediately for multi-select (no need to close dropdown)
+                this.$nextTick(() => this.sync());
             } else {
                 // Radio: If clicking the same option again, just close dropdown
                 // If clicking a different option, select it and close
@@ -320,15 +297,9 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 }
                 this.selected = [stringValue];
                 this.isOpen = false;
+                // Sync after selection change
+                this.$nextTick(() => this.sync());
             }
-
-            console.log('[<?= $escaper->escapeJs($optionId) ?>] After toggle - selected:', this.selected);
-
-            // Force reactivity with $nextTick to ensure UI updates
-            this.$nextTick(() => {
-                console.log('[<?= $escaper->escapeJs($optionId) ?>] Calling sync()');
-                this.sync();
-            });
         },
         remove(value) {
             // Ensure value is always a string for consistent comparison
