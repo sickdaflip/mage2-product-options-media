@@ -205,14 +205,23 @@ if (!window.__alpineTransitionHandlerInstalled) {
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
 
-            // Sync selected state from hidden inputs
+            // Sync selected state from hidden inputs using immutable array operations
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
-            container.querySelectorAll('input:checked').forEach(input => {
-                this.selected.push(input.value);
-            });
+            if (container) {
+                const checkedValues = [];
+                container.querySelectorAll('input:checked').forEach(input => {
+                    if (input.value && !checkedValues.includes(input.value)) {
+                        checkedValues.push(input.value);
+                    }
+                });
+                // Set as new array instead of mutating
+                this.selected = checkedValues;
+            }
 
-            // Remove duplicates after Alpine renders
-            this.$nextTick(() => this.deduplicate());
+            // Remove duplicates after Alpine renders - use multiple ticks to ensure DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => this.deduplicate(), 50);
+            });
         },
 
         get filtered() {
@@ -268,32 +277,53 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);
-            this.sync();
+            this.$nextTick(() => {
+                this.sync();
+            });
         },
         clear() {
             this.selected = this.isRequired ? [] : [''];
-            this.sync();
+            this.$nextTick(() => {
+                this.sync();
+            });
         },
         isSelected(value) {
             return this.selected.includes(value);
         },
         sync() {
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
-            container.querySelectorAll('input').forEach(input => {
+            if (!container) {
+                console.warn('Sync failed: container not found');
+                return;
+            }
+
+            const inputs = container.querySelectorAll('input');
+            if (!inputs || inputs.length === 0) {
+                console.warn('Sync failed: no inputs found');
+                return;
+            }
+
+            inputs.forEach(input => {
+                const wasChecked = input.checked;
+
                 if (input.value === '') {
                     input.checked = this.selected.length === 0 || this.selected.includes('');
                 } else {
                     input.checked = this.selected.includes(input.value);
                 }
-                if (input.dataset.optionId) {
-                    window.dispatchEvent(new CustomEvent('update-custom-option-active', {
-                        detail: {
-                            customOptionId: input.dataset.optionId,
-                            active: input.checked
-                        }
-                    }));
+
+                // Only trigger events if state actually changed
+                if (wasChecked !== input.checked) {
+                    if (input.dataset.optionId) {
+                        window.dispatchEvent(new CustomEvent('update-custom-option-active', {
+                            detail: {
+                                customOptionId: input.dataset.optionId,
+                                active: input.checked
+                            }
+                        }));
+                    }
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-                input.dispatchEvent(new Event('change', { bubbles: true }));
             });
         },
         open() {
