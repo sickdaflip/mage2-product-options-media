@@ -350,11 +350,11 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 }
             });
 
-            // For radio buttons: explicitly handle sibling deselection
+            // For radio buttons: explicitly trigger change on selected input
             if (!this.isMultiple && this.selected.length > 0 && this.selected[0] !== '') {
-                const selectedInput = container.querySelector('input[value="' + this.selected[0] + '"]');
+                const selectedValue = this.selected[0];
+                const selectedInput = Array.from(inputs).find(input => input.value === selectedValue);
                 if (selectedInput && selectedInput.type === 'radio') {
-                    // Trigger change event on the selected radio to ensure price updates
                     selectedInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
