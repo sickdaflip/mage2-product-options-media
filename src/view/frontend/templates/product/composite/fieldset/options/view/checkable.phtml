@@ -350,11 +350,12 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 }
             });
 
-            // For radio buttons: explicitly trigger change on selected input
-            if (!this.isMultiple && this.selected.length > 0 && this.selected[0] !== '') {
+            // For radio buttons: explicitly trigger change on selected input (including "None")
+            if (!this.isMultiple && this.selected.length > 0) {
                 const selectedValue = this.selected[0];
                 const selectedInput = Array.from(inputs).find(input => input.value === selectedValue);
-                if (selectedInput && selectedInput.type === 'radio') {
+                if (selectedInput && selectedInput.type === 'radio' && selectedInput.checked) {
+                    // Force change event to ensure price recalculation
                     selectedInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
