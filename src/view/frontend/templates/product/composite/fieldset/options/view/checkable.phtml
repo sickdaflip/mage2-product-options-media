@@ -175,17 +175,12 @@ if (!window.__alpineTransitionHandlerInstalled) {
         isRequired: <?= $isRequired ? 'true' : 'false' ?>,
         maxVisible: 4,
         showAll: false,
-
         deduplicate() {
-            // Remove duplicate LI elements by text content
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
             if (!ul) return;
-
-            // Find duplicate LI elements (without x-show) by text content
             const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
             const seen = new Map();
             const toRemove = [];
-
             liElements.forEach(li => {
                 const text = li.textContent.trim();
                 if (seen.has(text)) {
@@ -194,23 +189,17 @@ if (!window.__alpineTransitionHandlerInstalled) {
                     seen.set(text, li);
                 }
             });
-
             toRemove.forEach(li => li.remove());
         },
-
         init() {
-            // CRITICAL: Prevent multiple init() calls using this.$el (the element with x-data)
             if (this.$el.hasAttribute('data-alpine-initialized')) {
                 return;
             }
             this.$el.setAttribute('data-alpine-initialized', 'true');
-
-            // Load options from data-attribute (lazy loading approach)
             const optionsData = this.$el.getAttribute('data-options');
             if (optionsData) {
                 try {
                     const parsedOptions = JSON.parse(optionsData);
-                    // Normalize all values to strings immediately
                     this.options = parsedOptions.map(opt => ({
                         ...opt,
                         value: String(opt.value)
@@ -220,29 +209,22 @@ if (!window.__alpineTransitionHandlerInstalled) {
                     this.options = [];
                 }
             }
-
-            // Sync selected state from hidden inputs using immutable array operations
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             if (container) {
                 const checkedValues = [];
                 container.querySelectorAll('input:checked').forEach(input => {
-                    // Ensure values are strings
                     if (input.value && !checkedValues.includes(input.value)) {
                         checkedValues.push(String(input.value));
                     }
                 });
-                // Set as new array instead of mutating
                 this.selected = checkedValues;
             }
-
-            // Remove duplicates after Alpine renders
             this.$nextTick(() => {
                 setTimeout(() => {
                     this.deduplicate();
                 }, 100);
             });
         },
-
         get filtered() {
             if (!this.search.trim()) return this.options;
             const q = this.search.toLowerCase();
@@ -258,51 +240,38 @@ if (!window.__alpineTransitionHandlerInstalled) {
             return this.filtered.length - this.maxVisible;
         },
         get selectedOptions() {
-            // Ensure type-safe comparison: convert both to strings
             return this.options.filter(o => {
                 const match = this.selected.includes(String(o.value)) && o.value !== '';
                 return match;
             });
         },
         get selectedOption() {
-            // Ensure type-safe comparison: convert both to strings
             return this.options.find(o => this.selected.includes(String(o.value))) || null;
         },
         get hasSelection() {
             return this.isMultiple ? this.selectedOptions.length > 0 : (this.selected.length > 0 && this.selected[0] !== '');
         },
-
         toggle(value) {
-            // Ensure value is always a string for consistent comparison
             const stringValue = String(value);
-
             if (this.isMultiple) {
-                // Use filter/concat instead of splice/push for better reactivity
                 const idx = this.selected.indexOf(stringValue);
                 if (idx > -1) {
-                    // Remove: create new array without this value
                     this.selected = this.selected.filter(v => v !== stringValue);
                 } else {
-                    // Add: create new array with this value
                     this.selected = [...this.selected, stringValue];
                 }
-                // Sync immediately for multi-select (no need to close dropdown)
                 this.$nextTick(() => this.sync());
             } else {
-                // Radio: If clicking the same option again, just close dropdown
-                // If clicking a different option, select it and close
                 if (this.selected[0] === stringValue) {
                     this.isOpen = false;
-                    return; // Don't sync, value unchanged
+                    return;
                 }
                 this.selected = [stringValue];
                 this.isOpen = false;
-                // Sync after selection change
                 this.$nextTick(() => this.sync());
             }
         },
         remove(value) {
-            // Ensure value is always a string for consistent comparison
             const stringValue = String(value);
             this.selected = this.selected.filter(v => v !== stringValue);
             this.$nextTick(() => {
@@ -316,27 +285,20 @@ if (!window.__alpineTransitionHandlerInstalled) {
             });
         },
         isSelected(value) {
-            // Ensure type-safe comparison: convert both to strings
             return this.selected.includes(String(value));
         },
         sync() {
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             if (!container) return;
-
             const inputs = container.querySelectorAll('input');
             if (!inputs || inputs.length === 0) return;
-
             inputs.forEach(input => {
                 const wasChecked = input.checked;
                 const shouldBeChecked = input.value === ''
                     ? (this.selected.length === 0 || this.selected.includes(''))
                     : this.selected.includes(input.value);
-
                 input.checked = shouldBeChecked;
-
-                // Trigger events if state changed
                 if (wasChecked !== shouldBeChecked) {
-                    // Dispatch custom event for price calculation
                     if (input.dataset.optionId) {
                         window.dispatchEvent(new CustomEvent('update-custom-option-active', {
                             detail: {
@@ -345,26 +307,19 @@ if (!window.__alpineTransitionHandlerInstalled) {
                             }
                         }));
                     }
-                    // Dispatch change event for form handling
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-
-            // For radio buttons: explicitly trigger change on selected input (including "None")
             if (!this.isMultiple && this.selected.length > 0) {
                 const selectedValue = this.selected[0];
                 const selectedInput = Array.from(inputs).find(input => input.value === selectedValue);
                 if (selectedInput && selectedInput.type === 'radio' && selectedInput.checked) {
-                    // Force change event to ensure price recalculation
                     selectedInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
         },
         open() {
-            // CRITICAL: Deduplicate BEFORE transition starts (before isOpen = true)
-            // Doing it in $nextTick would interrupt the transition
             this.deduplicate();
-
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
