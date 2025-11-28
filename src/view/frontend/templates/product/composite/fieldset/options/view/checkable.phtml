@@ -165,10 +165,11 @@ if (!window.__alpineTransitionHandlerInstalled) {
 </div>
 
 <!-- Alpine.js Dropdown with Tags -->
-<div x-data="{
+<div data-options='<?= json_encode($optionsData, JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
+     x-data="{
         isOpen: false,
         search: '',
-        options: <?= $escaper->escapeHtmlAttr(json_encode($optionsData)) ?>,
+        options: [],
         selected: [],
         isMultiple: <?= $isCheckbox ? 'true' : 'false' ?>,
         isRequired: <?= $isRequired ? 'true' : 'false' ?>,
@@ -205,12 +206,22 @@ if (!window.__alpineTransitionHandlerInstalled) {
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
 
-            // Normalize options to ensure all values are strings
-            // JSON encoding may convert numeric strings to numbers
-            this.options = this.options.map(opt => ({
-                ...opt,
-                value: String(opt.value)
-            }));
+            // Load options from data-attribute (lazy loading approach)
+            // This ensures Alpine is fully initialized before options are loaded
+            const optionsData = this.$el.getAttribute('data-options');
+            if (optionsData) {
+                try {
+                    const parsedOptions = JSON.parse(optionsData);
+                    // Normalize all values to strings immediately
+                    this.options = parsedOptions.map(opt => ({
+                        ...opt,
+                        value: String(opt.value)
+                    }));
+                } catch (e) {
+                    console.error('Failed to parse options data:', e);
+                    this.options = [];
+                }
+            }
 
             // Sync selected state from hidden inputs using immutable array operations
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
@@ -228,7 +239,14 @@ if (!window.__alpineTransitionHandlerInstalled) {
 
             // Remove duplicates after Alpine renders - use multiple ticks to ensure DOM is ready
             this.$nextTick(() => {
-                setTimeout(() => this.deduplicate(), 50);
+                setTimeout(() => {
+                    this.deduplicate();
+                    // Force a re-render to ensure tags appear
+                    this.$nextTick(() => {
+                        // Trigger reactivity by creating a new array reference
+                        this.selected = [...this.selected];
+                    });
+                }, 100);
             });
         },
 
@@ -311,16 +329,10 @@ if (!window.__alpineTransitionHandlerInstalled) {
         },
         sync() {
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
-            if (!container) {
-                console.warn('Sync failed: container not found');
-                return;
-            }
+            if (!container) return;
 
             const inputs = container.querySelectorAll('input');
-            if (!inputs || inputs.length === 0) {
-                console.warn('Sync failed: no inputs found');
-                return;
-            }
+            if (!inputs || inputs.length === 0) return;
 
             inputs.forEach(input => {
                 const wasChecked = input.checked;
