@@ -127,6 +127,8 @@ if (!window.__alpineTransitionHandlerInstalled) {
            value=""
            checked
            class="product-custom-option"
+           data-price-amount="0"
+           data-price-type="fixed"
            data-option-id="<?= $escaper->escapeHtmlAttr($optionId) ?>_none" />
     <?php endif; ?>
     <?php
@@ -292,9 +294,6 @@ if (!window.__alpineTransitionHandlerInstalled) {
             if (!container) return;
             const inputs = container.querySelectorAll('input');
             if (!inputs || inputs.length === 0) return;
-            console.log('[DEBUG] sync() called for option <?= $escaper->escapeJs($optionId) ?>');
-            console.log('[DEBUG] this.selected:', this.selected);
-            console.log('[DEBUG] this.isMultiple:', this.isMultiple);
             let changedInputs = [];
             inputs.forEach(input => {
                 const wasChecked = input.checked;
@@ -302,7 +301,6 @@ if (!window.__alpineTransitionHandlerInstalled) {
                     ? (this.selected.length === 0 || this.selected.includes(''))
                     : this.selected.includes(input.value);
                 input.checked = shouldBeChecked;
-                console.log('[DEBUG] input.value:', input.value, 'wasChecked:', wasChecked, 'shouldBeChecked:', shouldBeChecked);
                 if (wasChecked !== shouldBeChecked) {
                     changedInputs.push(input);
                     if (input.dataset.optionId) {
@@ -316,20 +314,13 @@ if (!window.__alpineTransitionHandlerInstalled) {
                 }
             });
             if (this.isMultiple) {
-                console.log('[DEBUG] Checkbox mode - triggering change for', changedInputs.length, 'inputs');
                 changedInputs.forEach(input => {
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 });
             } else {
                 const selectedValue = this.selected.length > 0 ? this.selected[0] : '';
-                console.log('[DEBUG] Radio mode - selectedValue:', selectedValue);
                 const selectedInput = Array.from(inputs).find(input => input.value === selectedValue);
-                console.log('[DEBUG] selectedInput found:', !!selectedInput);
-                if (selectedInput) {
-                    console.log('[DEBUG] selectedInput.value:', selectedInput.value, 'checked:', selectedInput.checked, 'type:', selectedInput.type);
-                }
                 if (selectedInput && selectedInput.type === 'radio') {
-                    console.log('[DEBUG] Dispatching change event for radio input');
                     selectedInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
