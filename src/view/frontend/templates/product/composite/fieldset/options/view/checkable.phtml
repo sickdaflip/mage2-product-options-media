@@ -292,6 +292,7 @@ if (!window.__alpineTransitionHandlerInstalled) {
             if (!container) return;
             const inputs = container.querySelectorAll('input');
             if (!inputs || inputs.length === 0) return;
+            let changedInputs = [];
             inputs.forEach(input => {
                 const wasChecked = input.checked;
                 const shouldBeChecked = input.value === ''
@@ -299,6 +300,7 @@ if (!window.__alpineTransitionHandlerInstalled) {
                     : this.selected.includes(input.value);
                 input.checked = shouldBeChecked;
                 if (wasChecked !== shouldBeChecked) {
+                    changedInputs.push(input);
                     if (input.dataset.optionId) {
                         window.dispatchEvent(new CustomEvent('update-custom-option-active', {
                             detail: {
@@ -307,13 +309,16 @@ if (!window.__alpineTransitionHandlerInstalled) {
                             }
                         }));
                     }
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-            if (!this.isMultiple) {
+            if (this.isMultiple) {
+                changedInputs.forEach(input => {
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            } else {
                 const selectedValue = this.selected.length > 0 ? this.selected[0] : '';
                 const selectedInput = Array.from(inputs).find(input => input.value === selectedValue);
-                if (selectedInput && selectedInput.type === 'radio' && selectedInput.checked) {
+                if (selectedInput && selectedInput.type === 'radio') {
                     selectedInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
