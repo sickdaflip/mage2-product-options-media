@@ -118,7 +118,7 @@ class EnhancedSelectOption implements ArgumentInterface
         multiple: {$this->boolToJs($isMultiple)},
         required: {$this->boolToJs($required)},
         {$selectedConfig},
-        placeholder: '{$this->escaper->escapeJs(__($isMultiple ? 'Select options...' : 'Please select...'))}'
+        placeholder: '{$this->escaper->escapeJs(__('Select %1...', $option->getTitle()) . ($required ? ' *' : ''))}'
      })"
      @keydown.escape="close()"
      @click.outside="close()"
@@ -127,6 +127,7 @@ class EnhancedSelectOption implements ArgumentInterface
     <!-- Trigger Button -->
     <button type="button"
             id="{$selectId}_trigger"
+            aria-label="{$this->escaper->escapeHtmlAttr($option->getTitle() . ($required ? ' (required)' : ''))}"
             @click="open()"
             class="relative w-full min-h-12 px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer
                    hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary

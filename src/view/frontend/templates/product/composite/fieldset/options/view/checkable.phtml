@@ -102,14 +102,6 @@ if ($option):
 <!-- Checkable Option Container -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
 
-<!-- Option Label -->
-<label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-    <?= $escaper->escapeHtml($option->getTitle()) ?>
-    <?php if ($isRequired): ?>
-        <span class="text-red-500">*</span>
-    <?php endif; ?>
-</label>
-
 <style>
 [x-cloak] { display: none !important; }
 </style>
@@ -306,6 +298,7 @@ if ($option):
          @click="open()"
          tabindex="0"
          role="button"
+         aria-label="<?= $escaper->escapeHtmlAttr($option->getTitle() . ($isRequired ? ' (required)' : '')) ?>"
          @keydown.enter="open()"
          @keydown.space.prevent="open()"
          class="relative min-h-[46px] ps-0.5 pe-9 flex items-center flex-wrap w-full border border-gray-200 rounded-lg text-start text-sm cursor-pointer bg-white hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 transition-colors">
@@ -329,7 +322,7 @@ if ($option):
                     </div>
             </template>
             <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
-                <?= $escaper->escapeHtml(__('Select option...')) ?>
+                <?= $escaper->escapeHtml(__('Select %1...', $option->getTitle())) ?><?php if ($isRequired): ?><span class="text-red-500 ml-1">*</span><?php endif; ?>
             </span>
         </div>
 
@@ -342,7 +335,7 @@ if ($option):
                 <span x-show="hasSelection" class="text-gray-800 dark:text-neutral-200" x-text="selectedOption?.title"></span>
                 <span x-show="hasSelection && selectedOption?.priceFormatted" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
                 <span x-show="!hasSelection" class="text-gray-400 dark:text-neutral-500">
-                    <?= $escaper->escapeHtml(__('Select option...')) ?>
+                    <?= $escaper->escapeHtml(__('Select %1...', $option->getTitle())) ?><?php if ($isRequired): ?><span class="text-red-500 ml-1">*</span><?php endif; ?>
                 </span>
             </div>
         </template>
