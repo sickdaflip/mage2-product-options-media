@@ -178,7 +178,6 @@ class EnhancedSelectOption implements ArgumentInterface
 
     <!-- Dropdown Panel -->
     <div x-show="isOpen"
-         x-transition.opacity.duration.100ms
          class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden
                 dark:bg-neutral-900 dark:border-neutral-700"
          x-cloak>
