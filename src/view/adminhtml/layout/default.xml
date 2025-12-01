@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file default.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 01.12.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Sickdaflip_ProductOptionsMedia::css/flipdev-logo.css"/>
+    </head>
+</page>
