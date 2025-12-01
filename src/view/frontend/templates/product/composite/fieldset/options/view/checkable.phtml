@@ -307,9 +307,8 @@ if ($option):
          class="relative min-h-[46px] ps-0.5 pe-9 flex items-center flex-wrap w-full border border-gray-200 rounded-lg text-start text-sm cursor-pointer bg-white hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 transition-colors">
 
         <!-- Tags (Multi) -->
-        <template x-if="isMultiple">
-            <div class="flex flex-wrap items-center gap-1 p-1 flex-1 overflow-hidden" x-cloak>
-                <template x-for="opt in selectedOptionsDisplay" :key="opt.value">
+        <div x-show="isMultiple" class="flex flex-wrap items-center gap-1 p-1 flex-1 overflow-hidden">
+            <template x-for="opt in selectedOptionsDisplay" :key="opt.value">
                     <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700"
                          :title="opt.title">
                         <template x-if="opt.image">
@@ -324,12 +323,11 @@ if ($option):
                             </svg>
                         </button>
                     </div>
-                </template>
-                <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
-                    <?= $escaper->escapeHtml(__('Select option...')) ?>
-                </span>
-            </div>
-        </template>
+            </template>
+            <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
+                <?= $escaper->escapeHtml(__('Select option...')) ?>
+            </span>
+        </div>
 
         <!-- Single Select Display -->
         <template x-if="!isMultiple">
