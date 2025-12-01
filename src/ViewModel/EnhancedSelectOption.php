@@ -51,11 +51,6 @@ class EnhancedSelectOption implements ArgumentInterface
 
     public function getOptionHtml($option, Product $product, $preconfiguredValue = null): string
     {
-        // Check if module is enabled
-        if (!$this->configHelper->isEnabled()) {
-            return '';
-        }
-
         $optionType = $option->getType();
         $optionId = $option->getId();
 

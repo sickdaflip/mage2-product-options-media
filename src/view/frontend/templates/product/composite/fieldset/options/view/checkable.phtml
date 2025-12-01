@@ -34,11 +34,6 @@ $configHelper = $block->getData('configHelper') ?: \Magento\Framework\App\Object
 
 $option = $block->getOption();
 
-// Check if module is enabled
-if (!$configHelper->isEnabled()) {
-    return;
-}
-
 if ($option):
     $optionId = $option->getId();
 
