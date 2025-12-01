@@ -185,9 +185,6 @@ use Magento\Framework\Escaper;
         },
 
         select(value) {
-            // Prevent interaction during transitions
-            if (this.isTransitioning) return;
-
             if (this.isMultiple) {
                 const idx = this.selectedValues.indexOf(value);
                 if (idx > -1) {
