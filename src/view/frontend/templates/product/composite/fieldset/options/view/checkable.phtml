@@ -238,11 +238,13 @@ if ($option):
 
         toggle(value) {
             if (this.isMultiple) {
-                const idx = this.selected.indexOf(value);
-                if (idx > -1) {
-                    this.selected.splice(idx, 1);
+                // Use immutable array updates for better Alpine reactivity
+                if (this.selected.includes(value)) {
+                    // Remove: Create new array without this value
+                    this.selected = this.selected.filter(v => v !== value);
                 } else {
-                    this.selected.push(value);
+                    // Add: Create new array with this value
+                    this.selected = [...this.selected, value];
                 }
             } else {
                 // Radio: If clicking the same option again, just close dropdown
@@ -254,11 +256,13 @@ if ($option):
                 this.selected = [value];
                 this.close();
             }
-            this.sync();
+
+            // Use $nextTick to ensure Alpine has updated the DOM
+            this.$nextTick(() => this.sync());
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);
-            this.sync();
+            this.$nextTick(() => this.sync());
         },
         clear() {
             this.selected = this.isRequired ? [] : [''];

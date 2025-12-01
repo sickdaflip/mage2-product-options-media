@@ -185,22 +185,26 @@ use Magento\Framework\Escaper;
 
         select(value) {
             if (this.isMultiple) {
-                const idx = this.selectedValues.indexOf(value);
-                if (idx > -1) {
-                    this.selectedValues.splice(idx, 1);
+                // Use immutable array updates for better Alpine reactivity
+                if (this.selectedValues.includes(value)) {
+                    // Remove: Create new array without this value
+                    this.selectedValues = this.selectedValues.filter(v => v !== value);
                 } else {
-                    this.selectedValues.push(value);
+                    // Add: Create new array with this value
+                    this.selectedValues = [...this.selectedValues, value];
                 }
             } else {
                 this.selectedValue = value;
                 this.close();
             }
-            this.syncToOriginal();
+
+            // Use $nextTick to ensure Alpine has updated the DOM
+            this.$nextTick(() => this.syncToOriginal());
         },
 
         removeTag(value) {
             this.selectedValues = this.selectedValues.filter(v => v !== value);
-            this.syncToOriginal();
+            this.$nextTick(() => this.syncToOriginal());
         },
 
         isSelected(value) {
