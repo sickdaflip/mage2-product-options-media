@@ -102,6 +102,14 @@ if ($option):
 <!-- Checkable Option Container -->
 <div id="<?= $escaper->escapeHtmlAttr($wrapperId) ?>" class="checkable-option-container">
 
+<!-- Option Label -->
+<label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+    <?= $escaper->escapeHtml($option->getTitle()) ?>
+    <?php if ($isRequired): ?>
+        <span class="text-red-500">*</span>
+    <?php endif; ?>
+</label>
+
 <style>
 [x-cloak] { display: none !important; }
 </style>

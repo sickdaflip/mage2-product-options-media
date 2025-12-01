@@ -54,15 +54,6 @@ if ($isEnhancedSelect):
     $customOptionsViewModel = $viewModels->require(CustomOption::class);
 ?>
 <div class="pt-2 last:mb-4">
-    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2"
-           for="options_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
-        <?= $escaper->escapeHtml($option->getTitle()) ?>
-        <?php if ($option->getIsRequire()): ?>
-            <span class="text-red-500">*</span>
-        <?php endif; ?>
-    </label>
-    <div class="w-full">
-        <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
-    </div>
+    <?= $customOptionsViewModel->getOptionHtml($option, $product); ?>
 </div>
 <?php endif; ?>
