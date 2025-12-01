@@ -147,13 +147,14 @@ class EnhancedSelectOption implements ArgumentInterface
 
         <!-- Multi Select Tags -->
         <template x-if="isMultiple">
-            <div class="flex flex-wrap gap-2 pr-8">
-                <template x-for="opt in selectedList" :key="opt.value">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+            <div class="flex flex-wrap gap-2 pr-8 overflow-hidden">
+                <template x-for="opt in selectedListDisplay" :key="opt.value">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                          :title="opt.title">
                         <template x-if="opt.image">
                             <img :src="opt.image" :alt="opt.title" class="w-5 h-5 rounded-full object-cover">
                         </template>
-                        <span x-text="opt.title"></span>
+                        <span x-text="opt.titleShort"></span>
                         <button type="button" @click.stop="removeTag(opt.value)"
                                 class="ml-1 hover:text-red-500 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,6 +179,8 @@ class EnhancedSelectOption implements ArgumentInterface
     <!-- Dropdown Panel -->
     <div x-show="isOpen"
          x-transition.opacity.duration.100ms
+         @transitionend="isTransitioning = false"
+         @transitioncancel="isTransitioning = false"
          class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden
                 dark:bg-neutral-900 dark:border-neutral-700"
          x-cloak>

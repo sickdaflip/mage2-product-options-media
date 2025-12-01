@@ -85,6 +85,7 @@ use Magento\Framework\Escaper;
     document.addEventListener('alpine:init', () => {
         Alpine.data('enhancedSelect', (config = {}) => ({
         isOpen: false,
+        isTransitioning: false,
         search: '',
         selectedValue: config.selected || '',
         selectedValues: config.selectedMultiple || [],
@@ -95,6 +96,7 @@ use Magento\Framework\Escaper;
         originalSelect: null,
         maxVisible: 4,
         showAll: false,
+        maxTagLength: 25,
 
         init() {
             this.originalSelect = document.getElementById(config.selectId);
@@ -172,7 +174,20 @@ use Magento\Framework\Escaper;
             return this.options.filter(o => this.selectedValues.includes(o.value));
         },
 
+        get selectedListDisplay() {
+            // Truncate long titles for tag display
+            return this.selectedList.map(opt => ({
+                ...opt,
+                titleShort: opt.title.length > this.maxTagLength
+                    ? opt.title.substring(0, this.maxTagLength) + '...'
+                    : opt.title
+            }));
+        },
+
         select(value) {
+            // Prevent interaction during transitions
+            if (this.isTransitioning) return;
+
             if (this.isMultiple) {
                 const idx = this.selectedValues.indexOf(value);
                 if (idx > -1) {
@@ -182,8 +197,7 @@ use Magento\Framework\Escaper;
                 }
             } else {
                 this.selectedValue = value;
-                this.isOpen = false;
-                this.search = '';
+                this.close();
             }
             this.syncToOriginal();
         },
@@ -207,6 +221,10 @@ use Magento\Framework\Escaper;
         },
 
         open() {
+            // Prevent opening during transition
+            if (this.isTransitioning) return;
+
+            this.isTransitioning = true;
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
@@ -214,6 +232,10 @@ use Magento\Framework\Escaper;
         },
 
         close() {
+            // Prevent closing during transition
+            if (this.isTransitioning) return;
+
+            this.isTransitioning = true;
             this.isOpen = false;
             this.search = '';
         }
