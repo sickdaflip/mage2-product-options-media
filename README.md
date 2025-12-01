@@ -72,6 +72,8 @@ If you want to keep the data:
 bin/magento module:disable Sickdaflip_ProductOptionsMedia
 bin/magento setup:upgrade
 bin/magento cache:flush
+composer remove sickdaflip/mage2-product-options-media
+composer config --unset repositories.sickdaflip/mage2-product-options-media
 ```
 
 Database columns remain intact for potential re-enabling later.
@@ -403,4 +405,5 @@ Proprietary
 ---
 
 **Need support?** Open an issue on GitHub or contact the author.
+
 
