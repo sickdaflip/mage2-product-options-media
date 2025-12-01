@@ -18,6 +18,7 @@ use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
 use Magento\Catalog\Model\Product\Option;
 use Magento\Catalog\Pricing\Price\CustomOptionPrice;
 use Magento\Framework\Escaper;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 
 /**
@@ -29,8 +30,14 @@ use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 $product = $block->getProduct();
 $productPriceViewModel = $viewModels->require(ProductPrice::class);
 $mediaHelper = $viewModels->require(MediaHelper::class);
+$configHelper = $block->getData('configHelper') ?: \Magento\Framework\App\ObjectManager::getInstance()->get(ConfigHelper::class);
 
 $option = $block->getOption();
+
+// Check if module is enabled
+if (!$configHelper->isEnabled()) {
+    return;
+}
 
 if ($option):
     $optionId = $option->getId();
@@ -159,9 +166,14 @@ if ($option):
         selected: [],
         isMultiple: <?= $isCheckbox ? 'true' : 'false' ?>,
         isRequired: <?= $isRequired ? 'true' : 'false' ?>,
-        maxVisible: 4,
+        maxVisible: <?= (int) $configHelper->getMaxVisibleOptions() ?>,
         showAll: false,
-        maxTagLength: 25,
+        maxTagLength: <?= (int) $configHelper->getMaxTagLength() ?>,
+        searchEnabled: <?= $configHelper->isSearchEnabled() ? 'true' : 'false' ?>,
+        showImagesDropdown: <?= $configHelper->showImagesInDropdown() ? 'true' : 'false' ?>,
+        showImagesTags: <?= $configHelper->showImagesInTags() ? 'true' : 'false' ?>,
+        showPrices: <?= $configHelper->showPricesInDropdown() ? 'true' : 'false' ?>,
+        showDescriptions: <?= $configHelper->showDescriptions() ? 'true' : 'false' ?>,
 
         deduplicate() {
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
@@ -308,7 +320,7 @@ if ($option):
             <template x-for="opt in selectedOptionsDisplay" :key="opt.value">
                     <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700"
                          :title="opt.title">
-                        <template x-if="opt.image">
+                        <template x-if="opt.image && showImagesTags">
                             <img :src="opt.image" :alt="opt.title" class="size-6 me-1 rounded-full object-cover">
                         </template>
                         <div class="whitespace-nowrap text-gray-800 dark:text-neutral-200 text-sm px-1" x-text="opt.titleShort"></div>
@@ -329,11 +341,11 @@ if ($option):
         <!-- Single Select Display -->
         <template x-if="!isMultiple">
             <div class="flex items-center gap-2 py-2.5 px-3 flex-1" x-cloak>
-                <template x-if="hasSelection && selectedOption?.image">
+                <template x-if="hasSelection && selectedOption?.image && showImagesTags">
                     <img :src="selectedOption.image" :alt="selectedOption.title" class="size-6 rounded-full object-cover">
                 </template>
                 <span x-show="hasSelection" class="text-gray-800 dark:text-neutral-200" x-text="selectedOption?.title"></span>
-                <span x-show="hasSelection && selectedOption?.priceFormatted" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
+                <span x-show="hasSelection && selectedOption?.priceFormatted && showPrices" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
                 <span x-show="!hasSelection" class="text-gray-400 dark:text-neutral-500">
                     <?= $escaper->escapeHtml(__('Select %1...', $option->getTitle())) ?><?php if ($isRequired): ?><span class="text-red-500 ml-1">*</span><?php endif; ?>
                 </span>
@@ -355,7 +367,7 @@ if ($option):
          style="display: none;">
 
         <!-- Search -->
-        <div class="p-2 border-b border-gray-100 dark:border-neutral-800">
+        <div x-show="searchEnabled" class="p-2 border-b border-gray-100 dark:border-neutral-800">
             <input type="text"
                    x-ref="search"
                    x-model="search"
@@ -372,20 +384,20 @@ if ($option):
                     class="flex items-center py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800 transition-colors">
 
                     <!-- Image -->
-                    <template x-if="opt.image">
+                    <template x-if="opt.image && showImagesDropdown">
                         <img :src="opt.image" :alt="opt.title" class="size-8 me-2 rounded-full object-cover">
                     </template>
 
                     <!-- Content -->
                     <div class="flex-1">
                         <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" x-text="opt.title"></div>
-                        <template x-if="opt.description">
+                        <template x-if="opt.description && showDescriptions">
                             <div class="text-xs text-gray-500 dark:text-neutral-500" x-text="opt.description"></div>
                         </template>
                     </div>
 
                     <!-- Price -->
-                    <template x-if="opt.priceFormatted">
+                    <template x-if="opt.priceFormatted && showPrices">
                         <span class="text-sm text-gray-500 me-2" x-html="opt.priceFormatted"></span>
                     </template>
 

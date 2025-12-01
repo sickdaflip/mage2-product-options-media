@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file system.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 01.12.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="flipdev" translate="label" sortOrder="400">
+            <label>FlipDev</label>
+        </tab>
+        <section id="product_options_media" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Product Options Media</label>
+            <tab>flipdev</tab>
+            <resource>Sickdaflip_ProductOptionsMedia::config</resource>
+
+            <!-- General Settings -->
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Module</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable/disable the Product Options Media module functionality</comment>
+                </field>
+            </group>
+
+            <!-- Dropdown Settings -->
+            <group id="dropdown" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Dropdown Settings</label>
+                <field id="max_visible_options" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Max Visible Options</label>
+                    <comment>Number of options visible before "Show more" button appears (default: 4)</comment>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="max_height" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Dropdown Max Height (px)</label>
+                    <comment>Maximum height of dropdown in pixels (default: 288)</comment>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+                <field id="enable_search" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Search</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Show search field in dropdown</comment>
+                </field>
+            </group>
+
+            <!-- Tag Settings -->
+            <group id="tags" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Tag Settings</label>
+                <field id="max_tag_length" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Max Tag Length</label>
+                    <comment>Maximum characters displayed in tags before truncation (default: 25)</comment>
+                    <validate>validate-digits validate-greater-than-zero</validate>
+                </field>
+            </group>
+
+            <!-- Display Settings -->
+            <group id="display" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Display Settings</label>
+                <field id="show_images_in_dropdown" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Images in Dropdown</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Display option images in dropdown list</comment>
+                </field>
+                <field id="show_images_in_tags" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Images in Tags</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Display images in selected option tags</comment>
+                </field>
+                <field id="show_prices_in_dropdown" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Prices in Dropdown</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Display option prices in dropdown list</comment>
+                </field>
+                <field id="show_descriptions" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Show Descriptions</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Display option descriptions in dropdown</comment>
+                </field>
+                <field id="enable_dark_mode" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Dark Mode Support</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable dark mode CSS classes (requires theme support)</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

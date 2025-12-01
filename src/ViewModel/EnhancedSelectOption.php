@@ -20,23 +20,27 @@ use Magento\Catalog\Model\Product\Option;
 use Magento\Framework\Escaper;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 class EnhancedSelectOption implements ArgumentInterface
 {
     private Escaper $escaper;
     private MediaHelper $mediaHelper;
     private PricingHelper $pricingHelper;
+    private ConfigHelper $configHelper;
     private array $preconfiguredValues = [];
     private static array $renderedOptions = [];
 
     public function __construct(
         Escaper $escaper,
         MediaHelper $mediaHelper,
-        PricingHelper $pricingHelper
+        PricingHelper $pricingHelper,
+        ConfigHelper $configHelper
     ) {
         $this->escaper = $escaper;
         $this->mediaHelper = $mediaHelper;
         $this->pricingHelper = $pricingHelper;
+        $this->configHelper = $configHelper;
     }
 
     public function setPreconfiguredValues(array $values): self
@@ -47,6 +51,11 @@ class EnhancedSelectOption implements ArgumentInterface
 
     public function getOptionHtml($option, Product $product, $preconfiguredValue = null): string
     {
+        // Check if module is enabled
+        if (!$this->configHelper->isEnabled()) {
+            return '';
+        }
+
         $optionType = $option->getType();
         $optionId = $option->getId();
 
@@ -118,7 +127,14 @@ class EnhancedSelectOption implements ArgumentInterface
         multiple: {$this->boolToJs($isMultiple)},
         required: {$this->boolToJs($required)},
         {$selectedConfig},
-        placeholder: '{$this->escaper->escapeJs(__('Select %1...', $option->getTitle()) . ($required ? ' *' : ''))}'
+        placeholder: '{$this->escaper->escapeJs(__('Select %1...', $option->getTitle()) . ($required ? ' *' : ''))}',
+        maxVisible: {$this->configHelper->getMaxVisibleOptions()},
+        maxTagLength: {$this->configHelper->getMaxTagLength()},
+        searchEnabled: {$this->boolToJs($this->configHelper->isSearchEnabled())},
+        showImagesDropdown: {$this->boolToJs($this->configHelper->showImagesInDropdown())},
+        showImagesTags: {$this->boolToJs($this->configHelper->showImagesInTags())},
+        showPrices: {$this->boolToJs($this->configHelper->showPricesInDropdown())},
+        showDescriptions: {$this->boolToJs($this->configHelper->showDescriptions())}
      })"
      @keydown.escape="close()"
      @click.outside="close()"

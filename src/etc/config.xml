@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (C) Philipp Breitsprecher, Inc - All Rights Reserved
+  ~ @project Mage2 GD
+  ~ @file config.xml
+  ~ @author Philipp Breitsprecher
+  ~ @date 01.12.25
+  ~ @email philippbreitsprecher@gmail.com
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <product_options_media>
+            <general>
+                <enabled>1</enabled>
+            </general>
+            <dropdown>
+                <max_visible_options>4</max_visible_options>
+                <max_height>288</max_height>
+                <enable_search>1</enable_search>
+            </dropdown>
+            <tags>
+                <max_tag_length>25</max_tag_length>
+            </tags>
+            <display>
+                <show_images_in_dropdown>1</show_images_in_dropdown>
+                <show_images_in_tags>1</show_images_in_tags>
+                <show_prices_in_dropdown>1</show_prices_in_dropdown>
+                <show_descriptions>1</show_descriptions>
+                <enable_dark_mode>1</enable_dark_mode>
+            </display>
+        </product_options_media>
+    </default>
+</config>
