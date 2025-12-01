@@ -213,19 +213,15 @@ if ($option):
             return this.filtered.length - this.maxVisible;
         },
         get selectedOptions() {
-            const result = this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
-            console.log('selectedOptions computed:', result.length, 'options');
-            return result;
+            return this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
         },
         get selectedOptionsDisplay() {
-            const result = this.selectedOptions.map(opt => ({
+            return this.selectedOptions.map(opt => ({
                 ...opt,
                 titleShort: opt.title.length > this.maxTagLength
                     ? opt.title.substring(0, this.maxTagLength) + '...'
                     : opt.title
             }));
-            console.log('selectedOptionsDisplay computed:', result);
-            return result;
         },
         get selectedOption() {
             return this.options.find(o => this.selected.includes(o.value)) || null;
@@ -235,7 +231,6 @@ if ($option):
         },
 
         toggle(value) {
-            console.log('Toggle:', value, 'Before:', [...this.selected]);
             if (this.isMultiple) {
                 if (this.selected.includes(value)) {
                     this.selected = this.selected.filter(v => v !== value);
@@ -250,11 +245,7 @@ if ($option):
                 this.selected = [value];
                 this.close();
             }
-            console.log('Toggle:', value, 'After:', [...this.selected]);
-            this.$nextTick(() => {
-                console.log('Syncing...');
-                this.sync();
-            });
+            this.$nextTick(() => this.sync());
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);

@@ -179,7 +179,6 @@ use Magento\Framework\Escaper;
         },
 
         select(value) {
-            console.log('Select:', value, 'Before:', [...this.selectedValues]);
             if (this.isMultiple) {
                 if (this.selectedValues.includes(value)) {
                     this.selectedValues = this.selectedValues.filter(v => v !== value);
@@ -190,11 +189,7 @@ use Magento\Framework\Escaper;
                 this.selectedValue = value;
                 this.close();
             }
-            console.log('Select:', value, 'After:', [...this.selectedValues]);
-            this.$nextTick(() => {
-                console.log('Syncing to original...');
-                this.syncToOriginal();
-            });
+            this.$nextTick(() => this.syncToOriginal());
         },
 
         removeTag(value) {
