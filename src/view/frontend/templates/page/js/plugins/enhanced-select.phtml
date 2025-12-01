@@ -30,8 +30,6 @@ use Magento\Framework\Escaper;
             if (select) {
                 const selectId = select.id;
                 if (seen.has(selectId)) {
-                    // Duplicate found - remove it
-                    console.warn('Removing duplicate enhanced select for:', selectId);
                     container.remove();
                 } else {
                     seen.add(selectId);
@@ -48,8 +46,6 @@ use Magento\Framework\Escaper;
             if (inputContainer) {
                 const optionId = inputContainer.id.replace('checkable-inputs-', '');
                 if (seen.has(optionId)) {
-                    // Duplicate found - remove it
-                    console.warn('Removing duplicate checkable option for:', optionId);
                     container.remove();
                 } else {
                     seen.add(optionId);
@@ -101,7 +97,6 @@ use Magento\Framework\Escaper;
             this.originalSelect = document.getElementById(config.selectId);
             if (this.originalSelect) {
                 if (this.originalSelect.dataset.enhancedSelectInit) {
-                    console.warn('Enhanced select already initialized for', config.selectId);
                     return;
                 }
                 this.originalSelect.dataset.enhancedSelectInit = 'true';

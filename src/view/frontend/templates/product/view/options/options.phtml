@@ -184,7 +184,7 @@ $options = $block->decorateArray($block->getOptions());
                         case 'hidden':
                             // when we're configuring an item in the cart that already has an attachment
                             // this is only needed on page-initialization
-                            active = (target.value === 'save_old')
+                            active = (target.value === 'save_old');
                             break;
                         case 'select-one':
                         case 'select-multiple':
@@ -194,7 +194,6 @@ $options = $block->decorateArray($block->getOptions());
                                 $dispatch('update-custom-option-active', {customOptionId, active});
                             });
                             return;
-                            break;
                         case 'radio':
                             target.checked && document.querySelectorAll('input[name="' + target.name + '"]')
                                 .forEach(input => {
