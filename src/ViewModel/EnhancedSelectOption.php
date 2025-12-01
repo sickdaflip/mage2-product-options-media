@@ -126,6 +126,7 @@ class EnhancedSelectOption implements ArgumentInterface
 
     <!-- Trigger Button -->
     <button type="button"
+            id="{$selectId}_trigger"
             @click="open()"
             class="relative w-full min-h-12 px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer
                    hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary

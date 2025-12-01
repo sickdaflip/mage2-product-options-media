@@ -38,7 +38,7 @@ if ($isEnhancedSelect):
 ?>
 <div class="pt-2 last:mb-4">
     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2"
-           for="select_<?= $escaper->escapeHtmlAttr($option->getId()) ?>">
+           for="select_<?= $escaper->escapeHtmlAttr($option->getId()) ?>_trigger">
         <?= $escaper->escapeHtml($option->getTitle()) ?>
         <?php if ($option->getIsRequire()): ?>
             <span class="text-red-500">*</span>

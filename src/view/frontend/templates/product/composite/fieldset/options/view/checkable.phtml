@@ -294,7 +294,8 @@ if ($option):
      class="relative">
 
     <!-- Trigger / Wrapper -->
-    <div @click="open()"
+    <div id="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
+         @click="open()"
          class="relative min-h-[46px] ps-0.5 pe-9 flex items-center flex-wrap w-full border border-gray-200 rounded-lg text-start text-sm cursor-pointer bg-white hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 transition-colors">
 
         <!-- Tags (Multi) -->
