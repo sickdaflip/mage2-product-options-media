@@ -1,5 +1,5 @@
 {
-  "name": "sickdaflip/module-product-options-media",
+  "name": "sickdaflip/mage2-product-options-media",
   "description": "Add images and descriptions to custom product options for enhanced product configuration",
   "version": "1.2.0",
   "require": {

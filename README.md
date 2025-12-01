@@ -42,7 +42,7 @@ Add images and descriptions to custom product options for better product configu
 
 ```bash
 composer config repositories.mage2-product-options-media vcs https://github.com/sickdaflip/mage2-product-options-media.git
-composer require sickdaflip/module-product-options-media:dev-main
+composer require sickdaflip/mage2-product-options-media:dev-main
 bin/magento setup:upgrade
 bin/magento setup:di:compile
 bin/magento cache:flush
@@ -86,10 +86,12 @@ Adds two columns to `catalog_product_option_type_value`:
 
 Navigate to **Stores → Configuration → FlipDev → Product Options Media**
 
+The admin configuration panel features a custom FlipDev logo for easy identification.
+
 ### Available Settings:
 
 **General Settings:**
-- Enable/disable module
+- **Enable/disable module** - When disabled, falls back to standard Magento/Hyvä option templates
 
 **Dropdown Settings:**
 - Max visible options (default: 4)
@@ -107,6 +109,14 @@ Navigate to **Stores → Configuration → FlipDev → Product Options Media**
 - Enable/disable dark mode support
 
 All settings are configurable per store view.
+
+### Module Disable Behavior
+
+When the module is disabled via admin configuration:
+- Template override plugins skip execution
+- Standard Magento/Hyvä option templates are used
+- All product options display normally without enhanced features
+- No data is lost - re-enabling restores all functionality
 
 ## Usage
 
@@ -134,7 +144,14 @@ The module provides the following templates:
 - **checkable.phtml** - Template for radio and checkbox options (with image and description support)
 - **select.phtml** - Template for dropdown and multi-select options (with image and description support)
 
-All templates are automatically loaded via `catalog_product_view.xml` layout.
+#### How Templates Are Loaded
+
+Templates are automatically loaded via **Magento Plugins** (not layout XML):
+- `OptionsPlugin` - Overrides main options template
+- `SelectPlugin` - Overrides select/dropdown template
+- `CheckablePlugin` - Overrides radio/checkbox template
+
+**Smart Template Override:** Plugins check if module is enabled before overriding templates. When disabled, standard Magento/Hyvä templates are used automatically.
 
 #### Features Included:
 
@@ -327,14 +344,16 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - **Alpine.js Dropdown with Tags** - Modern multi-select interface for radio/checkbox options
 - **Enhanced Select Component** - Custom dropdown for select/multiple with image support
 - **Admin Configuration Panel** - FlipDev → Product Options Media with full customization
+- **FlipDev Branding** - Custom logo in admin navigation for easy module identification
 - **Configurable Settings** - Max visible options, tag length, search, images, prices, descriptions
-- **Module Enable/Disable** - Toggle entire module functionality from admin
+- **Module Enable/Disable** - Toggle entire module functionality from admin with proper fallback
 - **Descriptive Placeholders** - Self-explanatory placeholders (e.g., "Select Color... *")
 - **Character Limiting** - Tag titles truncated at 25 chars with full text tooltip (configurable)
 - **Search & Filter** - Live search within dropdown options (can be disabled)
 - **Show More/Less** - Pagination for large option sets (configurable threshold)
 
 **Fixes & Improvements:**
+- **Module Disable Fix** - Plugins now check config before overriding templates, fallback to standard Hyvä templates when disabled
 - **Race Condition Fix** - Removed x-transition to prevent Alpine.js promise cancellation errors
 - **Reactivity Fix** - Changed x-if to x-show for reliable tag rendering (DOM presence maintained)
 - **Immutable Arrays** - Using filter() and spread operator for reliable Alpine reactivity
@@ -343,14 +362,18 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - **Keyboard Navigation** - Full support: Tab, Enter, Space, Escape
 - **ARIA Support** - aria-label attributes for screen readers
 - **Dark Mode** - Complete dark mode styling
-- **i18n Support** - Dynamic translation with "Select %1..." pattern
+- **i18n Support** - Dynamic translation with "Select %1..." pattern (de_DE + en_US)
 - **Code Cleanup** - Removed debug console.warn() statements, fixed syntax errors
 
 **Technical:**
+- Plugin-based template override (OptionsPlugin, SelectPlugin, CheckablePlugin)
+- ConfigHelper dependency injection in all plugins for dynamic enable/disable
 - No more "Incorrect use of <label for=FORM_ELEMENT>" warnings
 - Removed inline JavaScript comments (parse error prevention)
 - Deduplication improvements (multi-layered approach)
 - BFCache handling for back/forward navigation
+- ACL permissions for admin configuration
+- Store view-level configuration support
 
 ### 1.1.0
 - Fixed duplicate rendering of checkbox/radio options caused by Alpine.js x-defer timing
