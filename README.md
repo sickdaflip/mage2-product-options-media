@@ -142,9 +142,16 @@ Renders all custom options and delegates to type-specific templates.
 product/composite/fieldset/options/view/checkable.phtml
 ```
 Features:
-- Image display inline with labels
-- Description modal button
-- Show more/less functionality (>3 options)
+- **Alpine.js Dropdown with Tags** - Modern multi-select interface with tag display
+- **Image Thumbnails** - Images displayed in dropdown options and selected tags
+- **Description Support** - Option descriptions shown in dropdown
+- **Search & Filter** - Live search within options
+- **Show More/Less** - Pagination for large option sets (default: 4 visible)
+- **Character Limiting** - Tag titles truncated at 25 characters with tooltip
+- **Overflow Protection** - Tags container with overflow:hidden
+- **Keyboard Navigation** - Full keyboard support (Tab, Enter, Space, Escape)
+- **ARIA Labels** - Screen reader support with descriptive labels
+- **Dark Mode** - Full dark mode support
 - "None" option for non-required radio buttons
 - Full price calculation integration
 
@@ -152,10 +159,7 @@ Features:
 ```
 product/view/options/type/select.phtml
 ```
-Features:
-- Image display below select
-- Description modal button
-- Price calculation for selected values
+Delegates to EnhancedSelectOption ViewModel for enhanced dropdown experience with same features as checkable options.
 
 All templates use:
 - **MediaHelper ViewModel** for image URL resolution
@@ -289,6 +293,35 @@ The module automatically converts absolute URLs to relative paths when saving. T
 - No user action required - automatically fixed in latest version
 
 ## Version History
+
+### 1.2.0 (Current)
+**Major UX & Accessibility Overhaul**
+
+**New Features:**
+- **Alpine.js Dropdown with Tags** - Modern multi-select interface for radio/checkbox options
+- **Enhanced Select Component** - Custom dropdown for select/multiple with image support
+- **Descriptive Placeholders** - Self-explanatory placeholders (e.g., "Select Color... *")
+- **Character Limiting** - Tag titles truncated at 25 chars with full text tooltip
+- **Search & Filter** - Live search within dropdown options
+- **Show More/Less** - Pagination for large option sets (>4 items)
+
+**Fixes & Improvements:**
+- **Race Condition Fix** - Removed x-transition to prevent Alpine.js promise cancellation errors
+- **Reactivity Fix** - Changed x-if to x-show for reliable tag rendering (DOM presence maintained)
+- **Immutable Arrays** - Using filter() and spread operator for reliable Alpine reactivity
+- **$nextTick Timing** - Proper sync timing with $nextTick before DOM updates
+- **Label Accessibility** - Removed separate labels in favor of integrated placeholders + aria-label
+- **Keyboard Navigation** - Full support: Tab, Enter, Space, Escape
+- **ARIA Support** - aria-label attributes for screen readers
+- **Dark Mode** - Complete dark mode styling
+- **i18n Support** - Dynamic translation with "Select %1..." pattern
+- **Code Cleanup** - Removed debug console.warn() statements, fixed syntax errors
+
+**Technical:**
+- No more "Incorrect use of <label for=FORM_ELEMENT>" warnings
+- Removed inline JavaScript comments (parse error prevention)
+- Deduplication improvements (multi-layered approach)
+- BFCache handling for back/forward navigation
 
 ### 1.1.0
 - Fixed duplicate rendering of checkbox/radio options caused by Alpine.js x-defer timing
