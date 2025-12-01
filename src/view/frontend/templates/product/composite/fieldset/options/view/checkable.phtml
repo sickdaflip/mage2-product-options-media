@@ -213,15 +213,19 @@ if ($option):
             return this.filtered.length - this.maxVisible;
         },
         get selectedOptions() {
-            return this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
+            const result = this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
+            console.log('selectedOptions computed:', result.length, 'options');
+            return result;
         },
         get selectedOptionsDisplay() {
-            return this.selectedOptions.map(opt => ({
+            const result = this.selectedOptions.map(opt => ({
                 ...opt,
                 titleShort: opt.title.length > this.maxTagLength
                     ? opt.title.substring(0, this.maxTagLength) + '...'
                     : opt.title
             }));
+            console.log('selectedOptionsDisplay computed:', result);
+            return result;
         },
         get selectedOption() {
             return this.options.find(o => this.selected.includes(o.value)) || null;
