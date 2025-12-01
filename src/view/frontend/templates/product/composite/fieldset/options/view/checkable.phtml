@@ -164,11 +164,9 @@ if ($option):
         maxTagLength: 25,
 
         deduplicate() {
-            // Remove duplicate LI elements by text content
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
             if (!ul) return;
 
-            // Find duplicate LI elements (without x-show) by text content
             const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
             const seen = new Map();
             const toRemove = [];
@@ -186,20 +184,17 @@ if ($option):
         },
 
         init() {
-            // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
             if (wrapper.hasAttribute('data-alpine-initialized')) {
                 return;
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
 
-            // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
                 this.selected.push(input.value);
             });
 
-            // Remove duplicates after Alpine renders
             this.$nextTick(() => this.deduplicate());
         },
 
@@ -221,7 +216,6 @@ if ($option):
             return this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
         },
         get selectedOptionsDisplay() {
-            // Truncate long titles for tag display
             return this.selectedOptions.map(opt => ({
                 ...opt,
                 titleShort: opt.title.length > this.maxTagLength
@@ -237,28 +231,26 @@ if ($option):
         },
 
         toggle(value) {
+            console.log('Toggle:', value, 'Before:', [...this.selected]);
             if (this.isMultiple) {
-                // Use immutable array updates for better Alpine reactivity
                 if (this.selected.includes(value)) {
-                    // Remove: Create new array without this value
                     this.selected = this.selected.filter(v => v !== value);
                 } else {
-                    // Add: Create new array with this value
                     this.selected = [...this.selected, value];
                 }
             } else {
-                // Radio: If clicking the same option again, just close dropdown
-                // If clicking a different option, select it and close
                 if (this.selected[0] === value) {
                     this.close();
-                    return; // Don't sync, value unchanged
+                    return;
                 }
                 this.selected = [value];
                 this.close();
             }
-
-            // Use $nextTick to ensure Alpine has updated the DOM
-            this.$nextTick(() => this.sync());
+            console.log('Toggle:', value, 'After:', [...this.selected]);
+            this.$nextTick(() => {
+                console.log('Syncing...');
+                this.sync();
+            });
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);
@@ -291,10 +283,7 @@ if ($option):
             });
         },
         open() {
-            // CRITICAL: Deduplicate BEFORE transition starts (before isOpen = true)
-            // Doing it in $nextTick would interrupt the transition
             this.deduplicate();
-
             this.isOpen = true;
             this.showAll = false;
             this.search = '';

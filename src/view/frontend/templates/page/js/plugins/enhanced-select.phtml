@@ -100,23 +100,19 @@ use Magento\Framework\Escaper;
         init() {
             this.originalSelect = document.getElementById(config.selectId);
             if (this.originalSelect) {
-                // Prevent duplicate initialization by marking the element
                 if (this.originalSelect.dataset.enhancedSelectInit) {
                     console.warn('Enhanced select already initialized for', config.selectId);
                     return;
                 }
                 this.originalSelect.dataset.enhancedSelectInit = 'true';
 
-                // Only sync from original if no preconfigured values were passed
                 const hasPreconfig = this.isMultiple
                     ? (this.selectedValues && this.selectedValues.length > 0)
                     : (this.selectedValue && this.selectedValue !== '');
 
                 if (hasPreconfig) {
-                    // Sync preconfigured values TO the original select
                     this.syncToOriginal();
                 } else {
-                    // Read from original select (fallback)
                     this.syncFromOriginal();
                 }
             }
@@ -174,7 +170,6 @@ use Magento\Framework\Escaper;
         },
 
         get selectedListDisplay() {
-            // Truncate long titles for tag display
             return this.selectedList.map(opt => ({
                 ...opt,
                 titleShort: opt.title.length > this.maxTagLength
@@ -184,22 +179,22 @@ use Magento\Framework\Escaper;
         },
 
         select(value) {
+            console.log('Select:', value, 'Before:', [...this.selectedValues]);
             if (this.isMultiple) {
-                // Use immutable array updates for better Alpine reactivity
                 if (this.selectedValues.includes(value)) {
-                    // Remove: Create new array without this value
                     this.selectedValues = this.selectedValues.filter(v => v !== value);
                 } else {
-                    // Add: Create new array with this value
                     this.selectedValues = [...this.selectedValues, value];
                 }
             } else {
                 this.selectedValue = value;
                 this.close();
             }
-
-            // Use $nextTick to ensure Alpine has updated the DOM
-            this.$nextTick(() => this.syncToOriginal());
+            console.log('Select:', value, 'After:', [...this.selectedValues]);
+            this.$nextTick(() => {
+                console.log('Syncing to original...');
+                this.syncToOriginal();
+            });
         },
 
         removeTag(value) {
