@@ -85,7 +85,6 @@ use Magento\Framework\Escaper;
     document.addEventListener('alpine:init', () => {
         Alpine.data('enhancedSelect', (config = {}) => ({
         isOpen: false,
-        isTransitioning: false,
         search: '',
         selectedValue: config.selected || '',
         selectedValues: config.selectedMultiple || [],
@@ -218,10 +217,6 @@ use Magento\Framework\Escaper;
         },
 
         open() {
-            // Prevent opening during transition
-            if (this.isTransitioning) return;
-
-            this.isTransitioning = true;
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
@@ -229,10 +224,6 @@ use Magento\Framework\Escaper;
         },
 
         close() {
-            // Prevent closing during transition
-            if (this.isTransitioning) return;
-
-            this.isTransitioning = true;
             this.isOpen = false;
             this.search = '';
         }
