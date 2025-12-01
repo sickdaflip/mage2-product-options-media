@@ -20,23 +20,27 @@ use Magento\Catalog\Model\Product\Option;
 use Magento\Framework\Escaper;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 class EnhancedSelectOption implements ArgumentInterface
 {
     private Escaper $escaper;
     private MediaHelper $mediaHelper;
     private PricingHelper $pricingHelper;
+    private ConfigHelper $configHelper;
     private array $preconfiguredValues = [];
     private static array $renderedOptions = [];
 
     public function __construct(
         Escaper $escaper,
         MediaHelper $mediaHelper,
-        PricingHelper $pricingHelper
+        PricingHelper $pricingHelper,
+        ConfigHelper $configHelper
     ) {
         $this->escaper = $escaper;
         $this->mediaHelper = $mediaHelper;
         $this->pricingHelper = $pricingHelper;
+        $this->configHelper = $configHelper;
     }
 
     public function setPreconfiguredValues(array $values): self
@@ -118,7 +122,14 @@ class EnhancedSelectOption implements ArgumentInterface
         multiple: {$this->boolToJs($isMultiple)},
         required: {$this->boolToJs($required)},
         {$selectedConfig},
-        placeholder: '{$this->escaper->escapeJs(__($isMultiple ? 'Select options...' : 'Please select...'))}'
+        placeholder: '{$this->escaper->escapeJs(__('Select %1...', $option->getTitle()) . ($required ? ' *' : ''))}',
+        maxVisible: {$this->configHelper->getMaxVisibleOptions()},
+        maxTagLength: {$this->configHelper->getMaxTagLength()},
+        searchEnabled: {$this->boolToJs($this->configHelper->isSearchEnabled())},
+        showImagesDropdown: {$this->boolToJs($this->configHelper->showImagesInDropdown())},
+        showImagesTags: {$this->boolToJs($this->configHelper->showImagesInTags())},
+        showPrices: {$this->boolToJs($this->configHelper->showPricesInDropdown())},
+        showDescriptions: {$this->boolToJs($this->configHelper->showDescriptions())}
      })"
      @keydown.escape="close()"
      @click.outside="close()"
@@ -126,6 +137,8 @@ class EnhancedSelectOption implements ArgumentInterface
 
     <!-- Trigger Button -->
     <button type="button"
+            id="{$selectId}_trigger"
+            aria-label="{$this->escaper->escapeHtmlAttr($option->getTitle() . ($required ? ' (required)' : ''))}"
             @click="open()"
             class="relative w-full min-h-12 px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer
                    hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
@@ -147,13 +160,14 @@ class EnhancedSelectOption implements ArgumentInterface
 
         <!-- Multi Select Tags -->
         <template x-if="isMultiple">
-            <div class="flex flex-wrap gap-2 pr-8">
-                <template x-for="opt in selectedList" :key="opt.value">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+            <div class="flex flex-wrap gap-2 pr-8 overflow-hidden">
+                <template x-for="opt in selectedListDisplay" :key="opt.value">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                          :title="opt.title">
                         <template x-if="opt.image">
                             <img :src="opt.image" :alt="opt.title" class="w-5 h-5 rounded-full object-cover">
                         </template>
-                        <span x-text="opt.title"></span>
+                        <span x-text="opt.titleShort"></span>
                         <button type="button" @click.stop="removeTag(opt.value)"
                                 class="ml-1 hover:text-red-500 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +191,6 @@ class EnhancedSelectOption implements ArgumentInterface
 
     <!-- Dropdown Panel -->
     <div x-show="isOpen"
-         x-transition.opacity.duration.100ms
          class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden
                 dark:bg-neutral-900 dark:border-neutral-700"
          x-cloak>

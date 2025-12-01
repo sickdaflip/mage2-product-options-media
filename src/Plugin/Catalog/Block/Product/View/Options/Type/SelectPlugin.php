@@ -13,21 +13,31 @@ declare(strict_types=1);
 namespace Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type;
 
 use Magento\Catalog\Block\Product\View\Options\Type\Select;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 /**
  * Plugin to override select option block template
  */
 class SelectPlugin
 {
+    private ConfigHelper $configHelper;
+
+    public function __construct(ConfigHelper $configHelper)
+    {
+        $this->configHelper = $configHelper;
+    }
+
     /**
-     * Set custom template for select block
+     * Set custom template for select block only if module is enabled
      *
      * @param Select $subject
      * @return void
      */
     public function beforeToHtml(Select $subject): void
     {
-        // Override select template
-        $subject->setTemplate('Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml');
+        // Only override template if module is enabled
+        if ($this->configHelper->isEnabled()) {
+            $subject->setTemplate('Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml');
+        }
     }
 }

@@ -30,8 +30,6 @@ use Magento\Framework\Escaper;
             if (select) {
                 const selectId = select.id;
                 if (seen.has(selectId)) {
-                    // Duplicate found - remove it
-                    console.warn('Removing duplicate enhanced select for:', selectId);
                     container.remove();
                 } else {
                     seen.add(selectId);
@@ -48,8 +46,6 @@ use Magento\Framework\Escaper;
             if (inputContainer) {
                 const optionId = inputContainer.id.replace('checkable-inputs-', '');
                 if (seen.has(optionId)) {
-                    // Duplicate found - remove it
-                    console.warn('Removing duplicate checkable option for:', optionId);
                     container.remove();
                 } else {
                     seen.add(optionId);
@@ -95,27 +91,23 @@ use Magento\Framework\Escaper;
         originalSelect: null,
         maxVisible: 4,
         showAll: false,
+        maxTagLength: 25,
 
         init() {
             this.originalSelect = document.getElementById(config.selectId);
             if (this.originalSelect) {
-                // Prevent duplicate initialization by marking the element
                 if (this.originalSelect.dataset.enhancedSelectInit) {
-                    console.warn('Enhanced select already initialized for', config.selectId);
                     return;
                 }
                 this.originalSelect.dataset.enhancedSelectInit = 'true';
 
-                // Only sync from original if no preconfigured values were passed
                 const hasPreconfig = this.isMultiple
                     ? (this.selectedValues && this.selectedValues.length > 0)
                     : (this.selectedValue && this.selectedValue !== '');
 
                 if (hasPreconfig) {
-                    // Sync preconfigured values TO the original select
                     this.syncToOriginal();
                 } else {
-                    // Read from original select (fallback)
                     this.syncFromOriginal();
                 }
             }
@@ -172,25 +164,32 @@ use Magento\Framework\Escaper;
             return this.options.filter(o => this.selectedValues.includes(o.value));
         },
 
+        get selectedListDisplay() {
+            return this.selectedList.map(opt => ({
+                ...opt,
+                titleShort: opt.title.length > this.maxTagLength
+                    ? opt.title.substring(0, this.maxTagLength) + '...'
+                    : opt.title
+            }));
+        },
+
         select(value) {
             if (this.isMultiple) {
-                const idx = this.selectedValues.indexOf(value);
-                if (idx > -1) {
-                    this.selectedValues.splice(idx, 1);
+                if (this.selectedValues.includes(value)) {
+                    this.selectedValues = this.selectedValues.filter(v => v !== value);
                 } else {
-                    this.selectedValues.push(value);
+                    this.selectedValues = [...this.selectedValues, value];
                 }
             } else {
                 this.selectedValue = value;
-                this.isOpen = false;
-                this.search = '';
+                this.close();
             }
-            this.syncToOriginal();
+            this.$nextTick(() => this.syncToOriginal());
         },
 
         removeTag(value) {
             this.selectedValues = this.selectedValues.filter(v => v !== value);
-            this.syncToOriginal();
+            this.$nextTick(() => this.syncToOriginal());
         },
 
         isSelected(value) {

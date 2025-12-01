@@ -13,21 +13,31 @@ declare(strict_types=1);
 namespace Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\Select;
 
 use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 /**
  * Plugin to override checkable option block template
  */
 class CheckablePlugin
 {
+    private ConfigHelper $configHelper;
+
+    public function __construct(ConfigHelper $configHelper)
+    {
+        $this->configHelper = $configHelper;
+    }
+
     /**
-     * Set custom template for checkable block
+     * Set custom template for checkable block only if module is enabled
      *
      * @param Checkable $subject
      * @return void
      */
     public function beforeToHtml(Checkable $subject): void
     {
-        // Override checkable template
-        $subject->setTemplate('Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml');
+        // Only override template if module is enabled
+        if ($this->configHelper->isEnabled()) {
+            $subject->setTemplate('Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml');
+        }
     }
 }

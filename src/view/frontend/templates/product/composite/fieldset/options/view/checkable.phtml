@@ -18,6 +18,7 @@ use Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable;
 use Magento\Catalog\Model\Product\Option;
 use Magento\Catalog\Pricing\Price\CustomOptionPrice;
 use Magento\Framework\Escaper;
+use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
 use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 
 /**
@@ -29,6 +30,7 @@ use Sickdaflip\ProductOptionsMedia\ViewModel\MediaHelper;
 $product = $block->getProduct();
 $productPriceViewModel = $viewModels->require(ProductPrice::class);
 $mediaHelper = $viewModels->require(MediaHelper::class);
+$configHelper = $block->getData('configHelper') ?: \Magento\Framework\App\ObjectManager::getInstance()->get(ConfigHelper::class);
 
 $option = $block->getOption();
 
@@ -159,15 +161,19 @@ if ($option):
         selected: [],
         isMultiple: <?= $isCheckbox ? 'true' : 'false' ?>,
         isRequired: <?= $isRequired ? 'true' : 'false' ?>,
-        maxVisible: 4,
+        maxVisible: <?= (int) $configHelper->getMaxVisibleOptions() ?>,
         showAll: false,
+        maxTagLength: <?= (int) $configHelper->getMaxTagLength() ?>,
+        searchEnabled: <?= $configHelper->isSearchEnabled() ? 'true' : 'false' ?>,
+        showImagesDropdown: <?= $configHelper->showImagesInDropdown() ? 'true' : 'false' ?>,
+        showImagesTags: <?= $configHelper->showImagesInTags() ? 'true' : 'false' ?>,
+        showPrices: <?= $configHelper->showPricesInDropdown() ? 'true' : 'false' ?>,
+        showDescriptions: <?= $configHelper->showDescriptions() ? 'true' : 'false' ?>,
 
         deduplicate() {
-            // Remove duplicate LI elements by text content
             const ul = document.querySelector('#<?= $escaper->escapeJs($wrapperId) ?> ul');
             if (!ul) return;
 
-            // Find duplicate LI elements (without x-show) by text content
             const liElements = Array.from(ul.querySelectorAll('li:not([x-show])'));
             const seen = new Map();
             const toRemove = [];
@@ -185,20 +191,17 @@ if ($option):
         },
 
         init() {
-            // CRITICAL: Prevent multiple init() calls using DOM attribute (not Alpine property)
             const wrapper = document.getElementById('<?= $escaper->escapeJs($wrapperId) ?>');
             if (wrapper.hasAttribute('data-alpine-initialized')) {
                 return;
             }
             wrapper.setAttribute('data-alpine-initialized', 'true');
 
-            // Sync selected state from hidden inputs
             const container = document.getElementById('checkable-inputs-<?= $escaper->escapeJs($optionId) ?>');
             container.querySelectorAll('input:checked').forEach(input => {
                 this.selected.push(input.value);
             });
 
-            // Remove duplicates after Alpine renders
             this.$nextTick(() => this.deduplicate());
         },
 
@@ -219,6 +222,14 @@ if ($option):
         get selectedOptions() {
             return this.options.filter(o => this.selected.includes(o.value) && o.value !== '');
         },
+        get selectedOptionsDisplay() {
+            return this.selectedOptions.map(opt => ({
+                ...opt,
+                titleShort: opt.title.length > this.maxTagLength
+                    ? opt.title.substring(0, this.maxTagLength) + '...'
+                    : opt.title
+            }));
+        },
         get selectedOption() {
             return this.options.find(o => this.selected.includes(o.value)) || null;
         },
@@ -228,27 +239,24 @@ if ($option):
 
         toggle(value) {
             if (this.isMultiple) {
-                const idx = this.selected.indexOf(value);
-                if (idx > -1) {
-                    this.selected.splice(idx, 1);
+                if (this.selected.includes(value)) {
+                    this.selected = this.selected.filter(v => v !== value);
                 } else {
-                    this.selected.push(value);
+                    this.selected = [...this.selected, value];
                 }
             } else {
-                // Radio: If clicking the same option again, just close dropdown
-                // If clicking a different option, select it and close
                 if (this.selected[0] === value) {
-                    this.isOpen = false;
-                    return; // Don't sync, value unchanged
+                    this.close();
+                    return;
                 }
                 this.selected = [value];
-                this.isOpen = false;
+                this.close();
             }
-            this.sync();
+            this.$nextTick(() => this.sync());
         },
         remove(value) {
             this.selected = this.selected.filter(v => v !== value);
-            this.sync();
+            this.$nextTick(() => this.sync());
         },
         clear() {
             this.selected = this.isRequired ? [] : [''];
@@ -277,10 +285,7 @@ if ($option):
             });
         },
         open() {
-            // CRITICAL: Deduplicate BEFORE transition starts (before isOpen = true)
-            // Doing it in $nextTick would interrupt the transition
             this.deduplicate();
-
             this.isOpen = true;
             this.showAll = false;
             this.search = '';
@@ -296,18 +301,24 @@ if ($option):
      class="relative">
 
     <!-- Trigger / Wrapper -->
-    <div @click="open()"
+    <div id="options_<?= $escaper->escapeHtmlAttr($optionId) ?>"
+         @click="open()"
+         tabindex="0"
+         role="button"
+         aria-label="<?= $escaper->escapeHtmlAttr($option->getTitle() . ($isRequired ? ' (required)' : '')) ?>"
+         @keydown.enter="open()"
+         @keydown.space.prevent="open()"
          class="relative min-h-[46px] ps-0.5 pe-9 flex items-center flex-wrap w-full border border-gray-200 rounded-lg text-start text-sm cursor-pointer bg-white hover:border-blue-500 focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 transition-colors">
 
         <!-- Tags (Multi) -->
-        <template x-if="isMultiple">
-            <div class="flex flex-wrap items-center gap-1 p-1 flex-1" x-cloak>
-                <template x-for="opt in selectedOptions" :key="opt.value">
-                    <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700">
-                        <template x-if="opt.image">
+        <div x-show="isMultiple" class="flex flex-wrap items-center gap-1 p-1 flex-1 overflow-hidden">
+            <template x-for="opt in selectedOptionsDisplay" :key="opt.value">
+                    <div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-0.5 dark:bg-neutral-900 dark:border-neutral-700"
+                         :title="opt.title">
+                        <template x-if="opt.image && showImagesTags">
                             <img :src="opt.image" :alt="opt.title" class="size-6 me-1 rounded-full object-cover">
                         </template>
-                        <div class="whitespace-nowrap text-gray-800 dark:text-neutral-200 text-sm px-1" x-text="opt.title"></div>
+                        <div class="whitespace-nowrap text-gray-800 dark:text-neutral-200 text-sm px-1" x-text="opt.titleShort"></div>
                         <button type="button"
                                 @click.stop="remove(opt.value)"
                                 class="inline-flex shrink-0 justify-center items-center size-5 ms-1 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm dark:bg-neutral-700/50 dark:hover:bg-neutral-700 dark:text-neutral-400 cursor-pointer">
@@ -316,23 +327,22 @@ if ($option):
                             </svg>
                         </button>
                     </div>
-                </template>
-                <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
-                    <?= $escaper->escapeHtml(__('Select option...')) ?>
-                </span>
-            </div>
-        </template>
+            </template>
+            <span x-show="selectedOptions.length === 0" class="text-gray-400 dark:text-neutral-500 py-2 px-2">
+                <?= $escaper->escapeHtml(__('Select %1...', $option->getTitle())) ?><?php if ($isRequired): ?><span class="text-red-500 ml-1">*</span><?php endif; ?>
+            </span>
+        </div>
 
         <!-- Single Select Display -->
         <template x-if="!isMultiple">
             <div class="flex items-center gap-2 py-2.5 px-3 flex-1" x-cloak>
-                <template x-if="hasSelection && selectedOption?.image">
+                <template x-if="hasSelection && selectedOption?.image && showImagesTags">
                     <img :src="selectedOption.image" :alt="selectedOption.title" class="size-6 rounded-full object-cover">
                 </template>
                 <span x-show="hasSelection" class="text-gray-800 dark:text-neutral-200" x-text="selectedOption?.title"></span>
-                <span x-show="hasSelection && selectedOption?.priceFormatted" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
+                <span x-show="hasSelection && selectedOption?.priceFormatted && showPrices" class="text-sm font-medium text-gray-500" x-html="selectedOption?.priceFormatted"></span>
                 <span x-show="!hasSelection" class="text-gray-400 dark:text-neutral-500">
-                    <?= $escaper->escapeHtml(__('Select option...')) ?>
+                    <?= $escaper->escapeHtml(__('Select %1...', $option->getTitle())) ?><?php if ($isRequired): ?><span class="text-red-500 ml-1">*</span><?php endif; ?>
                 </span>
             </div>
         </template>
@@ -347,13 +357,12 @@ if ($option):
 
     <!-- Dropdown -->
     <div x-show="isOpen"
-         x-transition
          x-cloak
          class="absolute z-50 mt-2 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden dark:bg-neutral-900 dark:border-neutral-700 shadow-lg"
          style="display: none;">
 
         <!-- Search -->
-        <div class="p-2 border-b border-gray-100 dark:border-neutral-800">
+        <div x-show="searchEnabled" class="p-2 border-b border-gray-100 dark:border-neutral-800">
             <input type="text"
                    x-ref="search"
                    x-model="search"
@@ -370,20 +379,20 @@ if ($option):
                     class="flex items-center py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800 transition-colors">
 
                     <!-- Image -->
-                    <template x-if="opt.image">
+                    <template x-if="opt.image && showImagesDropdown">
                         <img :src="opt.image" :alt="opt.title" class="size-8 me-2 rounded-full object-cover">
                     </template>
 
                     <!-- Content -->
                     <div class="flex-1">
                         <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" x-text="opt.title"></div>
-                        <template x-if="opt.description">
+                        <template x-if="opt.description && showDescriptions">
                             <div class="text-xs text-gray-500 dark:text-neutral-500" x-text="opt.description"></div>
                         </template>
                     </div>
 
                     <!-- Price -->
-                    <template x-if="opt.priceFormatted">
+                    <template x-if="opt.priceFormatted && showPrices">
                         <span class="text-sm text-gray-500 me-2" x-html="opt.priceFormatted"></span>
                     </template>
 
