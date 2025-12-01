@@ -41,7 +41,7 @@ Add images and descriptions to custom product options for better product configu
 ## Installation
 
 ```bash
-composer config repositories.mage2-product-options-media vcs https://github.com/sickdaflip/mage2-product-options-media.git
+composer config repositories.sickdaflip/mage2-product-options-media vcs https://github.com/sickdaflip/mage2-product-options-media.git
 composer require sickdaflip/mage2-product-options-media:dev-main
 bin/magento setup:upgrade
 bin/magento setup:di:compile
@@ -403,3 +403,4 @@ Proprietary
 ---
 
 **Need support?** Open an issue on GitHub or contact the author.
+
