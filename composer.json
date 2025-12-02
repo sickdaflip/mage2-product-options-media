@@ -9,7 +9,7 @@
     "magento/module-catalog": "^104.0"
   },
   "type": "magento2-module",
-  "license": "proprietary",
+  "license": "MIT",
   "authors": [
     {
       "name": "Philipp Breitsprecher",
@@ -24,4 +24,5 @@
       "Sickdaflip\\ProductOptionsMedia\\": "src/"
     }
   }
+
 }
