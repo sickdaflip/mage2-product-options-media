@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Setup;
+namespace FlipDev\ProductOptionsMedia\Setup;
 
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\SchemaSetupInterface;
@@ -20,7 +20,7 @@ use Magento\Framework\Setup\UninstallInterface;
  * Uninstall script for removing database columns
  *
  * Executed when module is uninstalled via:
- * bin/magento module:uninstall Sickdaflip_ProductOptionsMedia
+ * bin/magento module:uninstall FlipDev_ProductOptionsMedia
  */
 class Uninstall implements UninstallInterface
 {

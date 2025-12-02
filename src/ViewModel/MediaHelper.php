@@ -10,10 +10,10 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\ViewModel;
+namespace FlipDev\ProductOptionsMedia\ViewModel;
 
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value\Media;
+use FlipDev\ProductOptionsMedia\Model\Product\Option\Value\Media;
 
 /**
  * ViewModel for Media helper access in templates

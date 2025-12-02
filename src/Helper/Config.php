@@ -10,16 +10,14 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Helper;
+namespace FlipDev\ProductOptionsMedia\Helper;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
-use Magento\Store\Model\ScopeInterface;
+use FlipDev\Core\Helper\Config as CoreConfig;
 
 /**
  * Configuration helper for Product Options Media module
  */
-class Config extends AbstractHelper
+class Config
 {
     private const XML_PATH_ENABLED = 'product_options_media/general/enabled';
     private const XML_PATH_MAX_VISIBLE = 'product_options_media/dropdown/max_visible_options';
@@ -32,19 +30,26 @@ class Config extends AbstractHelper
     private const XML_PATH_SHOW_DESCRIPTIONS = 'product_options_media/display/show_descriptions';
     private const XML_PATH_ENABLE_DARK_MODE = 'product_options_media/display/enable_dark_mode';
 
-    public function __construct(Context $context)
+    private CoreConfig $coreConfig;
+
+    public function __construct(CoreConfig $coreConfig)
     {
-        parent::__construct($context);
+        $this->coreConfig = $coreConfig;
     }
 
     /**
-     * Check if module is enabled
+     * Check if module is enabled (depends on Core being enabled)
      */
     public function isEnabled(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        // First check if FlipDev Core is enabled
+        if (!$this->coreConfig->isEnabled($storeId)) {
+            return false;
+        }
+
+        // Then check this module's config
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_ENABLED,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -54,11 +59,10 @@ class Config extends AbstractHelper
      */
     public function getMaxVisibleOptions(?int $storeId = null): int
     {
-        return (int) $this->scopeConfig->getValue(
+        return (int) $this->coreConfig->getValue(
             self::XML_PATH_MAX_VISIBLE,
-            ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 4;
     }
 
     /**
@@ -66,11 +70,10 @@ class Config extends AbstractHelper
      */
     public function getMaxHeight(?int $storeId = null): int
     {
-        return (int) $this->scopeConfig->getValue(
+        return (int) $this->coreConfig->getValue(
             self::XML_PATH_MAX_HEIGHT,
-            ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 288;
     }
 
     /**
@@ -78,9 +81,8 @@ class Config extends AbstractHelper
      */
     public function isSearchEnabled(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_ENABLE_SEARCH,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -90,11 +92,10 @@ class Config extends AbstractHelper
      */
     public function getMaxTagLength(?int $storeId = null): int
     {
-        return (int) $this->scopeConfig->getValue(
+        return (int) $this->coreConfig->getValue(
             self::XML_PATH_MAX_TAG_LENGTH,
-            ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 25;
     }
 
     /**
@@ -102,9 +103,8 @@ class Config extends AbstractHelper
      */
     public function showImagesInDropdown(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_SHOW_IMAGES_DROPDOWN,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -114,9 +114,8 @@ class Config extends AbstractHelper
      */
     public function showImagesInTags(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_SHOW_IMAGES_TAGS,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -126,9 +125,8 @@ class Config extends AbstractHelper
      */
     public function showPricesInDropdown(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_SHOW_PRICES,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -138,9 +136,8 @@ class Config extends AbstractHelper
      */
     public function showDescriptions(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_SHOW_DESCRIPTIONS,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -150,11 +147,18 @@ class Config extends AbstractHelper
      */
     public function isDarkModeEnabled(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(
+        return $this->coreConfig->isSetFlag(
             self::XML_PATH_ENABLE_DARK_MODE,
-            ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * Check if debug mode is enabled (from Core)
+     */
+    public function isDebugMode(?int $storeId = null): bool
+    {
+        return $this->coreConfig->isDebugMode($storeId);
     }
 
     /**

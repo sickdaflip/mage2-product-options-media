@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product;
+namespace FlipDev\ProductOptionsMedia\Plugin\Catalog\Model\Product;
 
 use Magento\Catalog\Model\Product\Option;
 
