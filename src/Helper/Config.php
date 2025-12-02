@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace FlipDev\ProductOptionsMedia\Helper;
 
 use FlipDev\Core\Helper\Config as CoreConfig;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
 
 /**
  * Configuration helper for Product Options Media module
@@ -31,10 +33,14 @@ class Config
     private const XML_PATH_ENABLE_DARK_MODE = 'product_options_media/display/enable_dark_mode';
 
     private CoreConfig $coreConfig;
+    private ScopeConfigInterface $scopeConfig;
 
-    public function __construct(CoreConfig $coreConfig)
-    {
+    public function __construct(
+        CoreConfig $coreConfig,
+        ScopeConfigInterface $scopeConfig
+    ) {
         $this->coreConfig = $coreConfig;
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -48,8 +54,9 @@ class Config
         }
 
         // Then check this module's config
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLED,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -59,8 +66,9 @@ class Config
      */
     public function getMaxVisibleOptions(?int $storeId = null): int
     {
-        return (int) $this->coreConfig->getValue(
+        return (int) $this->scopeConfig->getValue(
             self::XML_PATH_MAX_VISIBLE,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         ) ?: 4;
     }
@@ -70,8 +78,9 @@ class Config
      */
     public function getMaxHeight(?int $storeId = null): int
     {
-        return (int) $this->coreConfig->getValue(
+        return (int) $this->scopeConfig->getValue(
             self::XML_PATH_MAX_HEIGHT,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         ) ?: 288;
     }
@@ -81,8 +90,9 @@ class Config
      */
     public function isSearchEnabled(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLE_SEARCH,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -92,8 +102,9 @@ class Config
      */
     public function getMaxTagLength(?int $storeId = null): int
     {
-        return (int) $this->coreConfig->getValue(
+        return (int) $this->scopeConfig->getValue(
             self::XML_PATH_MAX_TAG_LENGTH,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         ) ?: 25;
     }
@@ -103,8 +114,9 @@ class Config
      */
     public function showImagesInDropdown(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_SHOW_IMAGES_DROPDOWN,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -114,8 +126,9 @@ class Config
      */
     public function showImagesInTags(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_SHOW_IMAGES_TAGS,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -125,8 +138,9 @@ class Config
      */
     public function showPricesInDropdown(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_SHOW_PRICES,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -136,8 +150,9 @@ class Config
      */
     public function showDescriptions(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_SHOW_DESCRIPTIONS,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
@@ -147,8 +162,9 @@ class Config
      */
     public function isDarkModeEnabled(?int $storeId = null): bool
     {
-        return $this->coreConfig->isSetFlag(
+        return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLE_DARK_MODE,
+            ScopeInterface::SCOPE_STORE,
             $storeId
         );
     }
