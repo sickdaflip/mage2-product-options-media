@@ -1,5 +1,8 @@
 # Product Options Media for Magento 2
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/6c3b35601ed64ec38b5823107e8aff14)](https://app.codacy.com/gh/sickdaflip/mage2-product-options-media?utm_source=github.com&utm_medium=referral&utm_content=sickdaflip/mage2-product-options-media&utm_campaign=Badge_Grade)
+
+
 Add images and descriptions to custom product options for better product configuration experience.
 
 **Migrated from Magento 1.9** - maintains backward compatibility with existing data!
