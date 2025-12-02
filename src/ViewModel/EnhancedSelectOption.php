@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\ViewModel;
+namespace FlipDev\ProductOptionsMedia\ViewModel;
 
 use Magento\Catalog\Api\Data\ProductCustomOptionInterface;
 use Magento\Catalog\Model\Product;
@@ -20,7 +20,7 @@ use Magento\Catalog\Model\Product\Option;
 use Magento\Framework\Escaper;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
+use FlipDev\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 class EnhancedSelectOption implements ArgumentInterface
 {

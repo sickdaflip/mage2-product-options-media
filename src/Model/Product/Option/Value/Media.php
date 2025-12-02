@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Model\Product\Option\Value;
+namespace FlipDev\ProductOptionsMedia\Model\Product\Option\Value;
 
 use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;

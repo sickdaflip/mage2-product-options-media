@@ -12,54 +12,54 @@
 
     <!-- Plugin to extend product option value with media fields -->
     <type name="Magento\Catalog\Model\Product\Option\Value">
-        <plugin name="sickdaflip_product_options_media_value"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product\Option\ValuePlugin"
+        <plugin name="flipdev_product_options_media_value"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Model\Product\Option\ValuePlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>
 
     <!-- Plugin to ensure media fields are loaded in option values -->
     <type name="Magento\Catalog\Model\Product\Option">
-        <plugin name="sickdaflip_product_options_media_option"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\Product\OptionPlugin"
+        <plugin name="flipdev_product_options_media_option"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Model\Product\OptionPlugin"
                 sortOrder="10"
                 disabled="true"/>
     </type>
 
     <!-- Plugin to modify admin options display -->
     <type name="Magento\Catalog\Block\Adminhtml\Product\Edit\Tab\Options\Option">
-        <plugin name="sickdaflip_product_options_media_admin_option"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Adminhtml\Product\Edit\Tab\Options\OptionPlugin"
+        <plugin name="flipdev_product_options_media_admin_option"
+                type="FlipDev\ProductOptionsMedia\Plugin\Adminhtml\Product\Edit\Tab\Options\OptionPlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>
 
     <!-- Plugin to add custom fields to option value collection -->
     <type name="Magento\Catalog\Model\ResourceModel\Product\Option\Value\Collection">
-        <plugin name="sickdaflip_product_options_media_value_collection"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value\CollectionPlugin"
+        <plugin name="flipdev_product_options_media_value_collection"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value\CollectionPlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>
 
     <!-- Plugins to override frontend block templates -->
     <type name="Magento\Catalog\Block\Product\View\Options">
-        <plugin name="sickdaflip_product_options_media_options_block"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\OptionsPlugin"
+        <plugin name="flipdev_product_options_media_options_block"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\OptionsPlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>
 
     <type name="Magento\Catalog\Block\Product\View\Options\Type\Select">
-        <plugin name="sickdaflip_product_options_media_select_block"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\SelectPlugin"
+        <plugin name="flipdev_product_options_media_select_block"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\SelectPlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>
 
     <type name="Magento\Catalog\Block\Product\View\Options\Type\Select\Checkable">
-        <plugin name="sickdaflip_product_options_media_checkable_block"
-                type="Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\Select\CheckablePlugin"
+        <plugin name="flipdev_product_options_media_checkable_block"
+                type="FlipDev\ProductOptionsMedia\Plugin\Catalog\Block\Product\View\Options\Type\Select\CheckablePlugin"
                 sortOrder="10"
                 disabled="false"/>
     </type>

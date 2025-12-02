@@ -9,8 +9,9 @@
   -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Sickdaflip_ProductOptionsMedia">
+    <module name="FlipDev_ProductOptionsMedia" setup_version="1.3.0">
         <sequence>
+            <module name="FlipDev_Core"/>
             <module name="Magento_Catalog"/>
         </sequence>
     </module>

@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Controller\Adminhtml\Product\Option;
+namespace FlipDev\ProductOptionsMedia\Controller\Adminhtml\Product\Option;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;

@@ -15,7 +15,7 @@
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
-                            <resource id="Sickdaflip_ProductOptionsMedia::config" title="Product Options Media Configuration" sortOrder="100" />
+                            <resource id="FlipDev_ProductOptionsMedia::config" title="Product Options Media Configuration" sortOrder="100" />
                         </resource>
                     </resource>
                 </resource>

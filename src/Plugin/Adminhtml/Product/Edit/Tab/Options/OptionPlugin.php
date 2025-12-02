@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Plugin\Adminhtml\Product\Edit\Tab\Options;
+namespace FlipDev\ProductOptionsMedia\Plugin\Adminhtml\Product\Edit\Tab\Options;
 
 use Magento\Catalog\Block\Adminhtml\Product\Edit\Tab\Options\Option;
 

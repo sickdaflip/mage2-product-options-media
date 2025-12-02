@@ -10,13 +10,13 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <css src="Sickdaflip_ProductOptionsMedia::css/product-options-media.css"/>
+        <css src="FlipDev_ProductOptionsMedia::css/product-options-media.css"/>
     </head>
     <body>
         <referenceContainer name="content">
             <block class="Magento\Framework\View\Element\Template"
                    name="product.options.media.js"
-                   template="Sickdaflip_ProductOptionsMedia::product/edit/options-media.phtml"
+                   template="FlipDev_ProductOptionsMedia::product/edit/options-media.phtml"
                    after="-"/>
         </referenceContainer>
     </body>

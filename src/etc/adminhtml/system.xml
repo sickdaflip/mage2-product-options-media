@@ -10,13 +10,10 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
-        <tab id="flipdev" translate="label" sortOrder="400" class="flipdev-tab">
-            <label>FlipDev</label>
-        </tab>
-        <section id="product_options_media" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+        <section id="product_options_media" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Product Options Media</label>
             <tab>flipdev</tab>
-            <resource>Sickdaflip_ProductOptionsMedia::config</resource>
+            <resource>FlipDev_ProductOptionsMedia::config</resource>
 
             <!-- General Settings -->
             <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">

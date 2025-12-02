@@ -37,23 +37,39 @@ Add images and descriptions to custom product options for better product configu
 - Magento 2.4.x
 - PHP 8.4+
 - Hyva Theme (for frontend display)
+- **FlipDev_Core ^1.0** (Core module providing shared functionality and admin tab)
 
 ## Installation
 
+### Step 1: Install FlipDev_Core (Required Dependency)
+
 ```bash
-composer config repositories.sickdaflip/mage2-product-options-media vcs https://github.com/sickdaflip/mage2-product-options-media.git
+composer config repositories.flipdev/mage2-core vcs https://github.com/sickdaflip/mage2-core.git
+composer require sickdaflip/mage2-core:dev-main
+```
+
+### Step 2: Install Product Options Media Module
+
+```bash
+composer config repositories.flipdev/mage2-product-options-media vcs https://github.com/sickdaflip/mage2-product-options-media.git
 composer require sickdaflip/mage2-product-options-media:dev-main
 bin/magento setup:upgrade
 bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
+**Note:** FlipDev_Core must be installed first as it provides:
+- Shared configuration helpers
+- Common FlipDev admin tab
+- Logger functionality
+- Debug mode support
+
 ## Uninstallation
 
 To completely remove the module including database changes:
 
 ```bash
-bin/magento module:uninstall Sickdaflip_ProductOptionsMedia --remove-data
+bin/magento module:uninstall FlipDev_ProductOptionsMedia --remove-data
 ```
 
 This will:
@@ -69,11 +85,11 @@ This will:
 If you want to keep the data:
 
 ```bash
-bin/magento module:disable Sickdaflip_ProductOptionsMedia
+bin/magento module:disable FlipDev_ProductOptionsMedia
 bin/magento setup:upgrade
 bin/magento cache:flush
 composer remove sickdaflip/mage2-product-options-media
-composer config --unset repositories.sickdaflip/mage2-product-options-media
+composer config --unset repositories.flipdev/mage2-product-options-media
 ```
 
 Database columns remain intact for potential re-enabling later.
@@ -169,7 +185,7 @@ Templates are automatically loaded via **Magento Plugins** (not layout XML):
 If you want to customize the templates, you can override them in your theme:
 
 ```
-app/design/frontend/[Vendor]/[Theme]/Sickdaflip_ProductOptionsMedia/templates/...
+app/design/frontend/[Vendor]/[Theme]/FlipDev_ProductOptionsMedia/templates/...
 ```
 
 #### Template Files
@@ -258,7 +274,7 @@ Controller/Adminhtml/Product/Option/UploadImage.php
 
 The admin fields are added via UI Component Modifier:
 ```
-Ui/DataProvider/Product/Form/Modifier/CustomOptions.php
+FlipDev\ProductOptionsMedia\Ui\DataProvider\Product\Form\Modifier\CustomOptions
 ```
 
 Upload and Gallery buttons are added via:
@@ -270,7 +286,7 @@ view/adminhtml/templates/product/edit/options-media.phtml
 
 The module provides a ViewModel for accessing image URLs in templates:
 ```
-ViewModel/MediaHelper.php
+FlipDev\ProductOptionsMedia\ViewModel\MediaHelper
 ```
 
 This ViewModel is used instead of ObjectManager for proper dependency injection in templates.
@@ -339,7 +355,36 @@ The module automatically converts absolute URLs to relative paths when saving. T
 
 ## Version History
 
-### 1.2.0 (Current)
+### 1.3.0 (Current)
+**Module Rename & FlipDev_Core Integration**
+
+**Breaking Changes:**
+- **Module renamed** from `Sickdaflip_ProductOptionsMedia` to `FlipDev_ProductOptionsMedia`
+- **Namespace changed** from `Sickdaflip\ProductOptionsMedia` to `FlipDev\ProductOptionsMedia`
+- **New dependency:** Requires `FlipDev_Core ^1.0` (sickdaflip/mage2-core)
+
+**New Features:**
+- **FlipDev_Core Integration** - Shared configuration helpers and utilities
+- **Unified Admin Tab** - Uses FlipDev tab from Core module (no duplicate tabs)
+- **Core Config Helper** - Module now uses Core's configuration system
+- **Debug Mode Support** - Inherits debug mode from Core module
+- **Core Dependency Check** - Module only enables if FlipDev_Core is enabled
+
+**Technical Changes:**
+- Config Helper refactored to use `FlipDev\Core\Helper\Config`
+- All plugin names changed from `sickdaflip_*` to `flipdev_*`
+- Template paths updated to `FlipDev_ProductOptionsMedia::`
+- ACL resources updated to `FlipDev_ProductOptionsMedia::config`
+- Composer package remains `sickdaflip/mage2-product-options-media`
+
+**Migration Guide:**
+If upgrading from 1.2.0 or earlier:
+1. Install FlipDev_Core first: `composer require sickdaflip/mage2-core:dev-main`
+2. Run `bin/magento setup:upgrade`
+3. Module will automatically use new namespace
+4. Custom theme overrides need path update: `FlipDev_ProductOptionsMedia` instead of `Sickdaflip_ProductOptionsMedia`
+
+### 1.2.0
 **Major UX & Accessibility Overhaul + Admin Configuration**
 
 **New Features:**

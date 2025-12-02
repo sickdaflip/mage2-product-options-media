@@ -14,6 +14,6 @@ use Magento\Framework\Component\ComponentRegistrar;
 
 ComponentRegistrar::register(
     ComponentRegistrar::MODULE,
-    'Sickdaflip_ProductOptionsMedia',
+    'FlipDev_ProductOptionsMedia',
     __DIR__
 );

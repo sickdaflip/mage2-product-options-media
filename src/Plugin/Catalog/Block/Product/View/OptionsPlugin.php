@@ -10,10 +10,10 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Block\Product\View;
+namespace FlipDev\ProductOptionsMedia\Plugin\Catalog\Block\Product\View;
 
 use Magento\Catalog\Block\Product\View\Options;
-use Sickdaflip\ProductOptionsMedia\Helper\Config as ConfigHelper;
+use FlipDev\ProductOptionsMedia\Helper\Config as ConfigHelper;
 
 /**
  * Plugin to override option block templates
@@ -37,7 +37,7 @@ class OptionsPlugin
     {
         // Only override template if module is enabled
         if ($this->configHelper->isEnabled()) {
-            $subject->setTemplate('Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml');
+            $subject->setTemplate('FlipDev_ProductOptionsMedia::product/view/options/options.phtml');
         }
     }
 }

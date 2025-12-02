@@ -12,8 +12,8 @@
     <body>
         <!-- Load enhanced select JavaScript via template -->
         <referenceContainer name="before.body.end">
-            <block name="sickdaflip.product.options.enhanced.select.js"
-                   template="Sickdaflip_ProductOptionsMedia::page/js/plugins/enhanced-select.phtml" />
+            <block name="flipdev.product.options.enhanced.select.js"
+                   template="FlipDev_ProductOptionsMedia::page/js/plugins/enhanced-select.phtml" />
         </referenceContainer>
 
 
@@ -21,7 +21,7 @@
             <!-- Override the main options block template -->
             <referenceBlock name="product.info.options">
                 <action method="setTemplate">
-                    <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/options.phtml</argument>
+                    <argument name="template" xsi:type="string">FlipDev_ProductOptionsMedia::product/view/options/options.phtml</argument>
                 </action>
 
                 <!-- Override child block templates -->
@@ -29,13 +29,13 @@
                 <!--
                 <referenceBlock name="select">
                     <action method="setTemplate">
-                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/view/options/type/select.phtml</argument>
+                        <argument name="template" xsi:type="string">FlipDev_ProductOptionsMedia::product/view/options/type/select.phtml</argument>
                     </action>
                 </referenceBlock>
 
                 <referenceBlock name="checkable">
                     <action method="setTemplate">
-                        <argument name="template" xsi:type="string">Sickdaflip_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml</argument>
+                        <argument name="template" xsi:type="string">FlipDev_ProductOptionsMedia::product/composite/fieldset/options/view/checkable.phtml</argument>
                     </action>
                 </referenceBlock>
                 -->
