@@ -11,7 +11,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
     <router id="admin">
         <route id="productoptions" frontName="productoptions">
-            <module name="Sickdaflip_ProductOptionsMedia"/>
+            <module name="FlipDev_ProductOptionsMedia"/>
         </route>
     </router>
 </config>

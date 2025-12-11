@@ -10,16 +10,16 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Helper;
+namespace FlipDev\ProductOptionsMedia\Helper;
 
-use Magento\Framework\App\Helper\AbstractHelper;
-use Magento\Framework\App\Helper\Context;
+use FlipDev\Core\Helper\Config as CoreConfig;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 
 /**
  * Configuration helper for Product Options Media module
  */
-class Config extends AbstractHelper
+class Config
 {
     private const XML_PATH_ENABLED = 'product_options_media/general/enabled';
     private const XML_PATH_MAX_VISIBLE = 'product_options_media/dropdown/max_visible_options';
@@ -32,16 +32,28 @@ class Config extends AbstractHelper
     private const XML_PATH_SHOW_DESCRIPTIONS = 'product_options_media/display/show_descriptions';
     private const XML_PATH_ENABLE_DARK_MODE = 'product_options_media/display/enable_dark_mode';
 
-    public function __construct(Context $context)
-    {
-        parent::__construct($context);
+    private CoreConfig $coreConfig;
+    private ScopeConfigInterface $scopeConfig;
+
+    public function __construct(
+        CoreConfig $coreConfig,
+        ScopeConfigInterface $scopeConfig
+    ) {
+        $this->coreConfig = $coreConfig;
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
-     * Check if module is enabled
+     * Check if module is enabled (depends on Core being enabled)
      */
     public function isEnabled(?int $storeId = null): bool
     {
+        // First check if FlipDev Core is enabled
+        if (!$this->coreConfig->isEnabled($storeId)) {
+            return false;
+        }
+
+        // Then check this module's config
         return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLED,
             ScopeInterface::SCOPE_STORE,
@@ -58,7 +70,7 @@ class Config extends AbstractHelper
             self::XML_PATH_MAX_VISIBLE,
             ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 4;
     }
 
     /**
@@ -70,7 +82,7 @@ class Config extends AbstractHelper
             self::XML_PATH_MAX_HEIGHT,
             ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 288;
     }
 
     /**
@@ -94,7 +106,7 @@ class Config extends AbstractHelper
             self::XML_PATH_MAX_TAG_LENGTH,
             ScopeInterface::SCOPE_STORE,
             $storeId
-        );
+        ) ?: 25;
     }
 
     /**
@@ -155,6 +167,14 @@ class Config extends AbstractHelper
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * Check if debug mode is enabled (from Core)
+     */
+    public function isDebugMode(?int $storeId = null): bool
+    {
+        return $this->coreConfig->isDebugMode($storeId);
     }
 
     /**

@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-namespace Sickdaflip\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value;
+namespace FlipDev\ProductOptionsMedia\Plugin\Catalog\Model\ResourceModel\Product\Option\Value;
 
 use Magento\Catalog\Model\ResourceModel\Product\Option\Value\Collection;
 
